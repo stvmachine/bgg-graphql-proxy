@@ -2,7 +2,14 @@ import { RESTDataSource } from "apollo-datasource-rest";
 import { KeyValueCache } from "apollo-server-caching";
 import * as xml2js from "xml2js";
 import { CACHE_CONFIG } from "../config/cache";
-import { Collection, Geeklist, Play, Thing, User } from "../generated/graphql";
+import {
+  Collection,
+  Geeklist,
+  Play,
+  Thing,
+  ThingType,
+  User,
+} from "../generated/graphql";
 
 export class BGGDataSource extends RESTDataSource {
   private xmlParser: xml2js.Parser;
@@ -233,7 +240,7 @@ export class BGGDataSource extends RESTDataSource {
       id: item.id || "",
       name: this.getPrimaryName(item.name),
       alternateNames: this.getAlternateNames(item.name),
-      type: this.mapThingType(item.type),
+      type: this.mapThingType(item.type) as ThingType,
       yearPublished: this.parseNumber(item.yearpublished),
       minPlayers: this.parseNumber(item.minplayers),
       maxPlayers: this.parseNumber(item.maxplayers),
@@ -388,22 +395,8 @@ export class BGGDataSource extends RESTDataSource {
     return [];
   }
 
-  private mapThingType(
-    type: string
-  ):
-    | "BOARDGAME"
-    | "BOARDGAMEACCESSORY"
-    | "BOARDGAMEEXPANSION"
-    | "RPGITEM"
-    | "VIDEOGAME" {
-    const typeMap: Record<
-      string,
-      | "BOARDGAME"
-      | "BOARDGAMEACCESSORY"
-      | "BOARDGAMEEXPANSION"
-      | "RPGITEM"
-      | "VIDEOGAME"
-    > = {
+  private mapThingType(type: string): string {
+    const typeMap: Record<string, string> = {
       boardgame: "BOARDGAME",
       boardgameaccessory: "BOARDGAMEACCESSORY",
       boardgameexpansion: "BOARDGAMEEXPANSION",
