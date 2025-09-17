@@ -1,0 +1,25 @@
+overwrite: true
+schema: "src/schema/schema.graphql"
+generates:
+  src/generated/graphql.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      useIndexSignature: true
+      contextType: "../resolvers#ApolloContext"
+      mappers:
+        Thing: "../types#BGGThing"
+        User: "../types#BGGUser"
+        Collection: "../types#BGGCollection"
+        Play: "../types#BGGPlay"
+        Geeklist: "../types#BGGGeeklist"
+      scalars:
+        ID: string
+        String: string
+        Int: number
+        Float: number
+        Boolean: boolean
+      enumsAsTypes: true
+      avoidOptionals: true
+      maybeValue: T | null | undefined
