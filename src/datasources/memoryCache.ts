@@ -17,7 +17,8 @@ export class MemoryCache implements KeyValueCache<string> {
     return item.value;
   }
 
-  async set(key: string, value: string, ttl?: number): Promise<void> {
+  async set(key: string, value: string, options?: { ttl?: number }): Promise<void> {
+    const ttl = options?.ttl;
     const expires = ttl ? Date.now() + ttl * 1000 : Number.MAX_SAFE_INTEGER;
     this.cache.set(key, { value, expires });
   }
