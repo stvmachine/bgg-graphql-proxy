@@ -253,7 +253,6 @@ src/
 │   ├── bgg-api.ts   # BGG API client
 │   ├── cache.ts     # Redis caching
 │   └── dynamodb.ts  # DynamoDB operations
-├── types/           # TypeScript types
 └── index.ts         # Main server file
 ```
 

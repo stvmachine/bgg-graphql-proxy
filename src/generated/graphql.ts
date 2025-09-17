@@ -1,5 +1,4 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { BGGThing, BGGUser, BGGCollection, BGGPlay, BGGGeeklist } from '../types';
 import { ApolloContext } from '../resolvers';
 export type Maybe<T> = T | null | undefined;
 export type InputMaybe<T> = T | null | undefined;
@@ -8,7 +7,6 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -558,7 +556,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping of union types */
 export type ResolversUnionTypes<_RefType extends Record<string, unknown>> = ResolversObject<{
-  SearchResult: ( BGGThing );
+  SearchResult: ( Thing );
 }>;
 
 /** Mapping of interface types */
@@ -574,7 +572,7 @@ export type ResolversTypes = ResolversObject<{
   BoardgameRank: ResolverTypeWrapper<BoardgameRank>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Category: ResolverTypeWrapper<Category>;
-  Collection: ResolverTypeWrapper<BGGCollection>;
+  Collection: ResolverTypeWrapper<Collection>;
   CollectionFiltersInput: CollectionFiltersInput;
   CollectionItem: ResolverTypeWrapper<CollectionItem>;
   CollectionSubtype: CollectionSubtype;
@@ -585,22 +583,22 @@ export type ResolversTypes = ResolversObject<{
   Expansion: ResolverTypeWrapper<Expansion>;
   Family: ResolverTypeWrapper<Family>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
-  Geeklist: ResolverTypeWrapper<BGGGeeklist>;
+  Geeklist: ResolverTypeWrapper<Geeklist>;
   GeeklistComment: ResolverTypeWrapper<GeeklistComment>;
   GeeklistItem: ResolverTypeWrapper<GeeklistItem>;
-  Guild: ResolverTypeWrapper<Omit<Guild, 'manager' | 'members'> & { manager: ResolversTypes['User'], members: Array<ResolversTypes['GuildMember']> }>;
-  GuildMember: ResolverTypeWrapper<Omit<GuildMember, 'user'> & { user: ResolversTypes['User'] }>;
+  Guild: ResolverTypeWrapper<Guild>;
+  GuildMember: ResolverTypeWrapper<GuildMember>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   JSON: ResolverTypeWrapper<Scalars['JSON']['output']>;
   Link: ResolverTypeWrapper<Link>;
   Mechanic: ResolverTypeWrapper<Mechanic>;
   Microbadge: ResolverTypeWrapper<Microbadge>;
-  Play: ResolverTypeWrapper<BGGPlay>;
+  Play: ResolverTypeWrapper<Play>;
   PlayFiltersInput: PlayFiltersInput;
   PlayItem: ResolverTypeWrapper<PlayItem>;
   PlayPlayer: ResolverTypeWrapper<PlayPlayer>;
-  PlayResult: ResolverTypeWrapper<Omit<PlayResult, 'plays'> & { plays: Array<ResolversTypes['Play']> }>;
+  PlayResult: ResolverTypeWrapper<PlayResult>;
   Poll: ResolverTypeWrapper<Poll>;
   PollResult: ResolverTypeWrapper<PollResult>;
   Publisher: ResolverTypeWrapper<Publisher>;
@@ -613,11 +611,11 @@ export type ResolversTypes = ResolversObject<{
   Status: ResolverTypeWrapper<Status>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Subtype: ResolverTypeWrapper<Subtype>;
-  Thing: ResolverTypeWrapper<BGGThing>;
+  Thing: ResolverTypeWrapper<Thing>;
   ThingType: ThingType;
   TopItem: ResolverTypeWrapper<TopItem>;
   URL: ResolverTypeWrapper<Scalars['URL']['output']>;
-  User: ResolverTypeWrapper<BGGUser>;
+  User: ResolverTypeWrapper<User>;
   Version: ResolverTypeWrapper<Version>;
 }>;
 
@@ -629,7 +627,7 @@ export type ResolversParentTypes = ResolversObject<{
   BoardgameRank: BoardgameRank;
   Boolean: Scalars['Boolean']['output'];
   Category: Category;
-  Collection: BGGCollection;
+  Collection: Collection;
   CollectionFiltersInput: CollectionFiltersInput;
   CollectionItem: CollectionItem;
   Comment: Comment;
@@ -639,22 +637,22 @@ export type ResolversParentTypes = ResolversObject<{
   Expansion: Expansion;
   Family: Family;
   Float: Scalars['Float']['output'];
-  Geeklist: BGGGeeklist;
+  Geeklist: Geeklist;
   GeeklistComment: GeeklistComment;
   GeeklistItem: GeeklistItem;
-  Guild: Omit<Guild, 'manager' | 'members'> & { manager: ResolversParentTypes['User'], members: Array<ResolversParentTypes['GuildMember']> };
-  GuildMember: Omit<GuildMember, 'user'> & { user: ResolversParentTypes['User'] };
+  Guild: Guild;
+  GuildMember: GuildMember;
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
   JSON: Scalars['JSON']['output'];
   Link: Link;
   Mechanic: Mechanic;
   Microbadge: Microbadge;
-  Play: BGGPlay;
+  Play: Play;
   PlayFiltersInput: PlayFiltersInput;
   PlayItem: PlayItem;
   PlayPlayer: PlayPlayer;
-  PlayResult: Omit<PlayResult, 'plays'> & { plays: Array<ResolversParentTypes['Play']> };
+  PlayResult: PlayResult;
   Poll: Poll;
   PollResult: PollResult;
   Publisher: Publisher;
@@ -667,10 +665,10 @@ export type ResolversParentTypes = ResolversObject<{
   Status: Status;
   String: Scalars['String']['output'];
   Subtype: Subtype;
-  Thing: BGGThing;
+  Thing: Thing;
   TopItem: TopItem;
   URL: Scalars['URL']['output'];
-  User: BGGUser;
+  User: User;
   Version: Version;
 }>;
 

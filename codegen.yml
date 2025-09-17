@@ -8,12 +8,6 @@ generates:
     config:
       useIndexSignature: true
       contextType: "../resolvers#ApolloContext"
-      mappers:
-        Thing: "../types#BGGThing"
-        User: "../types#BGGUser"
-        Collection: "../types#BGGCollection"
-        Play: "../types#BGGPlay"
-        Geeklist: "../types#BGGGeeklist"
       scalars:
         ID: string
         String: string

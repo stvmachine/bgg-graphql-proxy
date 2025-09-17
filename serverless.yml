@@ -1,6 +1,6 @@
 service: bgg-graphql-proxy
 
-frameworkVersion: '3'
+frameworkVersion: '^3.0.0'
 
 provider:
   name: aws
@@ -32,7 +32,7 @@ provider:
 
 functions:
   api:
-    handler: dist/index.handler
+    handler: dist/handler.handler
     events:
       - http:
           path: /{proxy+}

@@ -1,5 +1,5 @@
 import { BGGDataSource, StorageDataSource } from "../datasources";
-import { Resolvers, ResolversTypes } from "../generated/graphql";
+import { Resolvers } from "../generated/graphql";
 
 export type ApolloContext = {
   dataSources: {
@@ -35,8 +35,7 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
         await dataSources.storage.cacheThing(thing.id, thing);
       }
 
-      // TODO: Possible needs to recheck this later
-      return things as unknown as ResolversTypes["Thing"][];
+      return things;
     },
 
     search: async (_, { query, type, exact }, { dataSources }) => {

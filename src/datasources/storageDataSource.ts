@@ -3,6 +3,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { config } from '../config';
 import { CACHE_CONFIG } from '../config/cache';
+import { Thing, User } from '../generated/graphql';
 
 export class StorageDataSource extends DataSource {
   private client: DynamoDBDocumentClient;
@@ -80,19 +81,19 @@ export class StorageDataSource extends DataSource {
   }
 
   // BGG-specific cache operations
-  async cacheThing(id: string, thing: any): Promise<void> {
+  async cacheThing(id: string, thing: Thing): Promise<void> {
     await this.store(`thing:${id}`, thing, CACHE_CONFIG.L2.THING); // 7 days
   }
 
-  async getCachedThing(id: string): Promise<any | null> {
+  async getCachedThing(id: string): Promise<Thing | null> {
     return await this.retrieve(`thing:${id}`);
   }
 
-  async cacheUser(username: string, user: any): Promise<void> {
+  async cacheUser(username: string, user: User): Promise<void> {
     await this.store(`user:${username}`, user, CACHE_CONFIG.L2.USER); // 1 day
   }
 
-  async getCachedUser(username: string): Promise<any | null> {
+  async getCachedUser(username: string): Promise<User | null> {
     return await this.retrieve(`user:${username}`);
   }
 
