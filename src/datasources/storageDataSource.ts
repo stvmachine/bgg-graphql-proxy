@@ -2,6 +2,7 @@ import { DataSource } from 'apollo-datasource';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { config } from '../config';
+import { CACHE_CONFIG } from '../config/cache';
 
 export class StorageDataSource extends DataSource {
   private client: DynamoDBDocumentClient;
@@ -80,7 +81,7 @@ export class StorageDataSource extends DataSource {
 
   // BGG-specific cache operations
   async cacheThing(id: string, thing: any): Promise<void> {
-    await this.store(`thing:${id}`, thing, 168); // 7 days
+    await this.store(`thing:${id}`, thing, CACHE_CONFIG.L2.THING); // 7 days
   }
 
   async getCachedThing(id: string): Promise<any | null> {
@@ -88,7 +89,7 @@ export class StorageDataSource extends DataSource {
   }
 
   async cacheUser(username: string, user: any): Promise<void> {
-    await this.store(`user:${username}`, user, 24); // 1 day
+    await this.store(`user:${username}`, user, CACHE_CONFIG.L2.USER); // 1 day
   }
 
   async getCachedUser(username: string): Promise<any | null> {
@@ -97,7 +98,7 @@ export class StorageDataSource extends DataSource {
 
   async cacheCollection(username: string, collection: any, subtype?: string): Promise<void> {
     const key = subtype ? `collection:${username}:${subtype}` : `collection:${username}`;
-    await this.store(key, collection, 1); // 1 hour
+    await this.store(key, collection, CACHE_CONFIG.L2.COLLECTION); // 1 hour
   }
 
   async getCachedCollection(username: string, subtype?: string): Promise<any | null> {
@@ -108,7 +109,7 @@ export class StorageDataSource extends DataSource {
   async cachePlays(username: string, plays: any, params: Record<string, any>): Promise<void> {
     const paramKey = Buffer.from(JSON.stringify(params)).toString('base64').slice(0, 16);
     const key = `plays:${username}:${paramKey}`;
-    await this.store(key, plays, 0.5); // 30 minutes
+    await this.store(key, plays, CACHE_CONFIG.L2.PLAYS); // 30 minutes
   }
 
   async getCachedPlays(username: string, params: Record<string, any>): Promise<any | null> {
@@ -118,7 +119,7 @@ export class StorageDataSource extends DataSource {
   }
 
   async cacheGeeklist(id: string, geeklist: any): Promise<void> {
-    await this.store(`geeklist:${id}`, geeklist, 24); // 1 day
+    await this.store(`geeklist:${id}`, geeklist, CACHE_CONFIG.L2.GEEKLIST); // 1 day
   }
 
   async getCachedGeeklist(id: string): Promise<any | null> {
@@ -127,7 +128,7 @@ export class StorageDataSource extends DataSource {
 
   async cacheGeeklists(username: string, geeklists: any[], page: number): Promise<void> {
     const key = `geeklists:${username}:${page}`;
-    await this.store(key, geeklists, 1); // 1 hour
+    await this.store(key, geeklists, CACHE_CONFIG.L2.GEEKLISTS); // 1 hour
   }
 
   async getCachedGeeklists(username: string, page: number): Promise<any | null> {
@@ -137,7 +138,7 @@ export class StorageDataSource extends DataSource {
 
   async cacheHotItems(items: any[], type?: string): Promise<void> {
     const key = type ? `hot:${type}` : 'hot:all';
-    await this.store(key, items, 1); // 1 hour
+    await this.store(key, items, CACHE_CONFIG.L2.HOT_ITEMS); // 1 hour
   }
 
   async getCachedHotItems(type?: string): Promise<any | null> {
@@ -147,7 +148,7 @@ export class StorageDataSource extends DataSource {
 
   async cacheSearchResults(query: string, results: any[], type?: string, exact?: boolean): Promise<void> {
     const searchKey = `${query}:${type || 'all'}:${exact ? 'exact' : 'fuzzy'}`;
-    await this.store(`search:${searchKey}`, results, 1); // 1 hour
+    await this.store(`search:${searchKey}`, results, CACHE_CONFIG.L2.SEARCH); // 1 hour
   }
 
   async getCachedSearchResults(query: string, type?: string, exact?: boolean): Promise<any | null> {
