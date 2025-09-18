@@ -1,10 +1,10 @@
-import { BGGDataSource, StorageDataSource } from "../datasources";
+import { BGGDataSource, StorageDataSource, StorageInterface } from "../datasources";
 import { Resolvers } from "../generated/graphql";
 
 export type ApolloContext = {
   dataSources: {
     bggAPI: BGGDataSource;
-    storage: StorageDataSource;
+    storage: StorageInterface;
   };
 };
 

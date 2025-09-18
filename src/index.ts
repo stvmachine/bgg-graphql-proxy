@@ -17,7 +17,7 @@ async function startServer() {
 
   // Read GraphQL schema
   const typeDefs = readFileSync(
-    join(__dirname, "../schema/schema.graphql"),
+    join(__dirname, "../src/schema/schema.graphql"),
     "utf8"
   );
 
@@ -55,8 +55,13 @@ async function startServer() {
         // Initialize data sources
         const dataSources = {
           bggAPI: new BGGDataSource(cache),
-          storage: new StorageDataSource(),
+          storage: StorageDataSource.create(),
         };
+        
+        console.log(`🔧 Data sources initialized:`, {
+          bggAPI: 'BGGDataSource',
+          storage: dataSources.storage.constructor.name
+        });
 
         return {
           req,

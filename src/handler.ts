@@ -35,7 +35,7 @@ async function createApolloServer(): Promise<ApolloServer<ApolloContext>> {
 
   // Read GraphQL schema
   const typeDefs = readFileSync(
-    join(__dirname, "../schema/schema.graphql"),
+    join(__dirname, "../src/schema/schema.graphql"),
     "utf8"
   );
 
@@ -67,10 +67,10 @@ export const handler = async (
     // Handle GraphQL requests
     if (event.path === "/graphql" || event.path === "/") {
       // Initialize data sources
-      const dataSources = {
-        bggAPI: new BGGDataSource(new MemoryCache()),
-        storage: new StorageDataSource(),
-      };
+        const dataSources = {
+          bggAPI: new BGGDataSource(new MemoryCache()),
+          storage: StorageDataSource.create(),
+        };
 
       const contextValue: ApolloContext = {
         dataSources,

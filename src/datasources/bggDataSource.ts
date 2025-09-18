@@ -1,6 +1,7 @@
-import { RESTDataSource } from "apollo-datasource-rest";
+import { DataSource } from "apollo-datasource";
 import { KeyValueCache } from "apollo-server-caching";
 import * as xml2js from "xml2js";
+import axios from "axios";
 import { CACHE_CONFIG } from "../config/cache";
 import {
   Collection,
@@ -11,9 +12,10 @@ import {
   User,
 } from "../generated/graphql";
 
-export class BGGDataSource extends RESTDataSource {
+export class BGGDataSource extends DataSource {
   private xmlParser: xml2js.Parser;
   private cache?: KeyValueCache<string>;
+  private baseURL: string;
 
   constructor(cache?: KeyValueCache<string>) {
     super();
@@ -38,33 +40,36 @@ export class BGGDataSource extends RESTDataSource {
 
   private async makeRequest<T>(url: string, ttl?: number): Promise<T> {
     try {
-      console.log(`BGG API request: ${url}`);
-
       // Check L1 cache first
       if (this.cache && ttl) {
         const cacheKey = `bgg:${url}`;
         const cached = await this.cache.get(cacheKey);
         if (cached) {
-          console.log(`L1 cache hit for: ${url}`);
           return JSON.parse(cached);
         }
       }
 
-      // Make API request
-      const response = await this.get(url);
+      // Make API request using axios
+      const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+      
+      const response = await axios.get(fullUrl, {
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'BGG-GraphQL-Proxy/1.0.0',
+        },
+      });
 
       let result: T;
-      if (typeof response === "string") {
-        result = await this.parseXML(response);
+      if (typeof response.data === "string") {
+        result = await this.parseXML(response.data);
       } else {
-        result = response;
+        result = response.data;
       }
 
       // Store in L1 cache
       if (this.cache && ttl) {
         const cacheKey = `bgg:${url}`;
         await this.cache.set(cacheKey, JSON.stringify(result), { ttl });
-        console.log(`L1 cache stored for: ${url} (TTL: ${ttl}s)`);
       }
 
       return result;
@@ -85,8 +90,9 @@ export class BGGDataSource extends RESTDataSource {
       CACHE_CONFIG.L1.THING
     );
 
-    if (data?.items?.item) {
-      return this.normalizeThing(data.items.item);
+    // BGG API returns items directly as 'item', not nested under 'items'
+    if (data?.item) {
+      return this.normalizeThing(data.item);
     }
 
     return null;
@@ -98,10 +104,11 @@ export class BGGDataSource extends RESTDataSource {
       CACHE_CONFIG.L1.THING
     );
 
-    if (data?.items?.item) {
-      const items = Array.isArray(data.items.item)
-        ? data.items.item
-        : [data.items.item];
+    // BGG API returns items directly as 'item' array, not nested under 'items'
+    if (data?.item) {
+      const items = Array.isArray(data.item)
+        ? data.item
+        : [data.item];
       return items.map((item: any) => this.normalizeThing(item));
     }
 
@@ -119,10 +126,11 @@ export class BGGDataSource extends RESTDataSource {
 
     const data = await this.makeRequest<any>(url, CACHE_CONFIG.L1.SEARCH);
 
-    if (data?.items?.item) {
-      const items = Array.isArray(data.items.item)
-        ? data.items.item
-        : [data.items.item];
+    // BGG API returns items directly as 'item' array, not nested under 'items'
+    if (data?.item) {
+      const items = Array.isArray(data.item)
+        ? data.item
+        : [data.item];
       return items.map((item: any) => this.normalizeThing(item));
     }
 
@@ -136,8 +144,9 @@ export class BGGDataSource extends RESTDataSource {
       CACHE_CONFIG.L1.USER
     );
 
-    if (data?.user) {
-      return this.normalizeUser(data.user);
+    // BGG API returns user data directly in the root object, not nested under 'user'
+    if (data?.id && data?.name) {
+      return this.normalizeUser(data);
     }
 
     return null;
@@ -223,10 +232,11 @@ export class BGGDataSource extends RESTDataSource {
 
     const data = await this.makeRequest<any>(url, CACHE_CONFIG.L1.HOT_ITEMS);
 
-    if (data?.items?.item) {
-      const items = Array.isArray(data.items.item)
-        ? data.items.item
-        : [data.items.item];
+    // BGG API returns items directly as 'item' array, not nested under 'items'
+    if (data?.item) {
+      const items = Array.isArray(data.item)
+        ? data.item
+        : [data.item];
       return items.map((item: any) => this.normalizeThing(item));
     }
 
@@ -241,16 +251,16 @@ export class BGGDataSource extends RESTDataSource {
       name: this.getPrimaryName(item.name),
       alternateNames: this.getAlternateNames(item.name),
       type: this.mapThingType(item.type) as ThingType,
-      yearPublished: this.parseNumber(item.yearpublished),
-      minPlayers: this.parseNumber(item.minplayers),
-      maxPlayers: this.parseNumber(item.maxplayers),
-      playingTime: this.parseNumber(item.playingtime),
-      minPlayTime: this.parseNumber(item.minplaytime),
-      maxPlayTime: this.parseNumber(item.maxplaytime),
-      minAge: this.parseNumber(item.minage),
-      description: item.description,
-      image: item.image,
-      thumbnail: item.thumbnail,
+      yearPublished: this.parseNumber(item.yearpublished?.value || item.yearpublished),
+      minPlayers: this.parseNumber(item.minplayers?.value || item.minplayers),
+      maxPlayers: this.parseNumber(item.maxplayers?.value || item.maxplayers),
+      playingTime: this.parseNumber(item.playingtime?.value || item.playingtime),
+      minPlayTime: this.parseNumber(item.minplaytime?.value || item.minplaytime),
+      maxPlayTime: this.parseNumber(item.maxplaytime?.value || item.maxplaytime),
+      minAge: this.parseNumber(item.minage?.value || item.minage),
+      description: item.description?.value || item.description,
+      image: item.image?.value || item.image,
+      thumbnail: item.thumbnail?.value || item.thumbnail,
       average: this.parseFloat(item.statistics?.ratings?.average),
       bayesAverage: this.parseFloat(item.statistics?.ratings?.bayesaverage),
       usersRated: this.parseNumber(item.statistics?.ratings?.usersrated),
@@ -280,17 +290,17 @@ export class BGGDataSource extends RESTDataSource {
     return {
       __typename: "User",
       id: user.id || "",
-      username: user.username || "",
-      firstName: user.firstname || "",
-      lastName: user.lastname || "",
-      dateRegistered: user.dateregistered || "",
-      supportYears: this.parseNumber(user.supportyears) || 0,
-      designerId: user.designerid,
-      publisherId: user.publisherid,
-      address: user.address
+      username: user.name || "",
+      firstName: user.firstname?.value || "",
+      lastName: user.lastname?.value || "",
+      dateRegistered: user.yearregistered?.value || "",
+      supportYears: this.parseNumber(user.supportyears?.value) || 0,
+      designerId: user.designerid?.value,
+      publisherId: user.publisherid?.value,
+      address: user.stateorprovince || user.country
         ? {
-            city: user.address.city || "",
-            isoCountry: user.address.isocountry || "",
+            city: user.stateorprovince?.value || "",
+            isoCountry: user.country?.value || "",
           }
         : undefined,
       guilds: [],

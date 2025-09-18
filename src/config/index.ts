@@ -24,4 +24,8 @@ export const config = {
     tablePrefix: process.env.DYNAMODB_TABLE_PREFIX || 'bgg-graphql',
     endpoint: process.env.DYNAMODB_ENDPOINT || undefined,
   },
+
+  storage: {
+    type: process.env.STORAGE_TYPE || 'dynamodb', // 'dynamodb' or 'keyvalue'
+  },
 };
