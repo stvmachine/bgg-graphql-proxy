@@ -28,6 +28,9 @@ interface Context {
 // Global server instance
 let server: ApolloServer<ApolloContext> | null = null;
 
+// Global cache instance
+let globalCache: MemoryCache | null = null;
+
 async function createApolloServer(): Promise<ApolloServer<ApolloContext>> {
   if (server) {
     return server;
@@ -46,8 +49,8 @@ async function createApolloServer(): Promise<ApolloServer<ApolloContext>> {
     throw new Error('Failed to load GraphQL schema');
   }
 
-  // Create cache instance
-  const cache = new MemoryCache();
+  // Create shared cache instance
+  globalCache = new MemoryCache();
 
   // Create Apollo Server
   server = new ApolloServer<ApolloContext>({
@@ -57,14 +60,14 @@ async function createApolloServer(): Promise<ApolloServer<ApolloContext>> {
       ApolloServerPluginLandingPageLocalDefault({ embed: true }),
     ],
     introspection: true,
-    cache,
+    cache: globalCache,
   });
 
   await server.start();
   return server;
 }
 
-export const handler = async (
+const handler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
@@ -74,12 +77,14 @@ export const handler = async (
 
     // Handle GraphQL requests
     if (event.path === "/graphql" || event.path === "/") {
-      // Create cache instance
-      const cache = new MemoryCache();
+      // Ensure we have the shared cache
+      if (!globalCache) {
+        throw new Error('Cache not initialized');
+      }
       
-      // Initialize data sources
+      // Initialize data sources with shared cache
       const dataSources = {
-        bggAPI: new BGGDataSource(cache),
+        bggAPI: new BGGDataSource(globalCache),
         storage: StorageDataSource.create(),
       };
 
@@ -221,3 +226,6 @@ export const handler = async (
     };
   }
 };
+
+// Export as default for Vercel
+export default handler;
