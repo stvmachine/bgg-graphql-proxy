@@ -66,11 +66,14 @@ export const handler = async (
 
     // Handle GraphQL requests
     if (event.path === "/graphql" || event.path === "/") {
+      // Create cache instance
+      const cache = new MemoryCache();
+      
       // Initialize data sources
-        const dataSources = {
-          bggAPI: new BGGDataSource(new MemoryCache()),
-          storage: StorageDataSource.create(),
-        };
+      const dataSources = {
+        bggAPI: new BGGDataSource(cache),
+        storage: StorageDataSource.create(),
+      };
 
       const contextValue: ApolloContext = {
         dataSources,

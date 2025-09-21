@@ -1,9 +1,8 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { config } from '../config';
-import { CACHE_CONFIG } from '../config/cache';
-import { BaseStorageDataSource } from './storageInterface';
 import { KeyValueDatabase } from './keyValueDatabase';
+import { BaseStorageDataSource } from './storageInterface';
 
 export class StorageDataSource extends BaseStorageDataSource {
   private client: DynamoDBDocumentClient;

@@ -6,11 +6,19 @@ A modern GraphQL proxy for the BoardGameGeek API built with TypeScript, Apollo S
 
 - 🎮 **Complete BGG API Coverage**: Board games, users, collections, plays, geeklists, and more
 - 🚀 **GraphQL API**: Modern, type-safe API with introspection and playground
-- ⚡ **Apollo Caching**: Built-in HTTP caching with intelligent TTL
-- 💾 **DynamoDB Storage**: Persistent data storage with TTL
-- ☁️ **AWS Ready**: Serverless deployment with Lambda and API Gateway
+- ⚡ **Redis Caching**: Fast, scalable caching with Redis
+- 💾 **Persistent Storage**: DynamoDB or KeyValue database for long-term storage
+- ☁️ **Serverless Ready**: Deploy to AWS Lambda, Vercel, Railway, Render
 - 🔧 **TypeScript**: Full type safety and excellent developer experience
-- 📊 **Cost Effective**: Optimized for low-cost hosting
+- 📊 **Cost Effective**: Optimized for free hosting platforms
+
+## 📚 Documentation
+
+- [Complete Documentation](docs/README.md) - Full documentation index
+- [Setup & Configuration](docs/setup/) - Redis setup, environment variables, deployment
+- [Architecture & Design](docs/architecture/) - System architecture, caching strategy
+- [API Reference](docs/api/) - GraphQL schema, query examples
+- [Architecture Decision Records](docs/adr/) - Design decisions and rationale
 
 ## Quick Start
 
@@ -170,53 +178,8 @@ See `infrastructure/` directory for CDK deployment scripts.
    - Upload `dist/` folder to Lambda
    - Configure environment variables
 
-## Cost Optimization
 
-### DynamoDB
-- **On-Demand Billing**: Pay only for what you use
-- **TTL**: Automatic cleanup of old data
-- **Single Table Design**: Reduces costs
 
-### Lambda
-- **Memory**: 512MB (adjust based on usage)
-- **Timeout**: 30 seconds
-- **Cold Start**: Optimized with minimal dependencies
-
-### ElastiCache
-- **t3.micro**: For development
-- **t3.small**: For production
-- **Reserved Instances**: For predictable workloads
-
-### Estimated Monthly Costs (Low Traffic)
-- DynamoDB: $1-5
-- Lambda: $0-2
-- ElastiCache: $15-25
-- **Total: $16-32/month**
-
-## Environment Variables
-
-```bash
-# Server
-PORT=4000
-NODE_ENV=development
-
-# BGG API
-BGG_API_BASE_URL=https://boardgamegeek.com/xmlapi2
-
-# Redis
-REDIS_URL=redis://localhost:6379
-REDIS_PASSWORD=
-REDIS_DB=0
-
-# AWS
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-
-# DynamoDB
-DYNAMODB_TABLE_PREFIX=bgg-graphql
-DYNAMODB_ENDPOINT=  # Leave empty for production
-```
 
 ## API Endpoints
 

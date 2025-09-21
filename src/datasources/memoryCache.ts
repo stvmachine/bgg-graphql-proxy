@@ -1,52 +1,60 @@
 import { KeyValueCache } from 'apollo-server-caching';
+import { RedisCache } from '../config/redis';
 
 export class MemoryCache implements KeyValueCache<string> {
-  private cache = new Map<string, { value: string; expires: number }>();
+  private redisCache: RedisCache;
+
+  constructor() {
+    this.redisCache = new RedisCache();
+    console.log('🔴 MemoryCache: Using Redis for caching');
+  }
 
   async get(key: string): Promise<string | undefined> {
-    const item = this.cache.get(key);
-    if (!item) {
+    try {
+      const redisValue = await this.redisCache.get(key);
+      return redisValue || undefined;
+    } catch (error) {
+      console.error('Redis get failed:', error);
       return undefined;
     }
-
-    if (Date.now() > item.expires) {
-      this.cache.delete(key);
-      return undefined;
-    }
-
-    return item.value;
   }
 
   async set(key: string, value: string, options?: { ttl?: number }): Promise<void> {
     const ttl = options?.ttl;
-    const expires = ttl ? Date.now() + ttl * 1000 : Number.MAX_SAFE_INTEGER;
-    this.cache.set(key, { value, expires });
+    
+    try {
+      await this.redisCache.set(key, value, ttl);
+    } catch (error) {
+      console.error('Redis set failed:', error);
+    }
   }
 
   async delete(key: string): Promise<boolean> {
-    return this.cache.delete(key);
+    try {
+      await this.redisCache.del(key);
+      return true;
+    } catch (error) {
+      console.error('Redis delete failed:', error);
+      return false;
+    }
   }
 
   async clear(): Promise<void> {
-    this.cache.clear();
+    // Redis doesn't have a clear all method, so we'll skip this
+    console.log('Redis clear: Not implemented (Redis doesn\'t support clear all)');
   }
 
-  // Utility methods
+  // Utility methods - not applicable for Redis
   size(): number {
-    return this.cache.size;
+    return 0; // Redis doesn't provide size count
   }
 
   keys(): string[] {
-    return Array.from(this.cache.keys());
+    return []; // Redis doesn't provide keys list
   }
 
-  // Clean up expired entries
+  // Clean up expired entries - Redis handles TTL automatically
   cleanup(): void {
-    const now = Date.now();
-    for (const [key, item] of this.cache.entries()) {
-      if (now > item.expires) {
-        this.cache.delete(key);
-      }
-    }
+    // Redis handles TTL automatically, no cleanup needed
   }
 }

@@ -43,10 +43,13 @@ export class BGGDataSource extends DataSource {
       // Check L1 cache first
       if (this.cache && ttl) {
         const cacheKey = `bgg:${url}`;
+        console.log(`🔍 Checking cache for key: ${cacheKey}`);
         const cached = await this.cache.get(cacheKey);
         if (cached) {
+          console.log(`✅ Cache hit for key: ${cacheKey}`);
           return JSON.parse(cached);
         }
+        console.log(`❌ Cache miss for key: ${cacheKey}`);
       }
 
       // Make API request using axios
@@ -69,7 +72,9 @@ export class BGGDataSource extends DataSource {
       // Store in L1 cache
       if (this.cache && ttl) {
         const cacheKey = `bgg:${url}`;
+        console.log(`💾 Storing in cache: ${cacheKey} (TTL: ${ttl}s)`);
         await this.cache.set(cacheKey, JSON.stringify(result), { ttl });
+        console.log(`✅ Stored in cache: ${cacheKey}`);
       }
 
       return result;
