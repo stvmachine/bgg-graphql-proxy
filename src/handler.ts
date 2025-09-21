@@ -6,23 +6,20 @@ import { config } from "./config";
 import { BGGDataSource, MemoryCache, StorageDataSource } from "./datasources";
 import { ApolloContext, resolvers } from "./resolvers";
 
-// AWS Lambda types (inline to avoid dependency)
-interface APIGatewayProxyEvent {
-  httpMethod: string;
-  path: string;
-  headers?: { [key: string]: string };
-  body?: string;
-  queryStringParameters?: { [key: string]: string };
+// Vercel serverless function types
+interface VercelRequest {
+  method?: string;
+  url?: string;
+  headers?: { [key: string]: string | string[] | undefined };
+  body?: any;
+  query?: { [key: string]: string | string[] | undefined };
 }
 
-interface APIGatewayProxyResult {
-  statusCode: number;
-  headers: { [key: string]: string };
-  body: string;
-}
-
-interface Context {
-  requestId: string;
+interface VercelResponse {
+  status: (code: number) => VercelResponse;
+  json: (data: any) => void;
+  setHeader: (name: string, value: string) => void;
+  end: (data?: string) => void;
 }
 
 // Global server instance
@@ -68,15 +65,19 @@ async function createApolloServer(): Promise<ApolloServer<ApolloContext>> {
 }
 
 const handler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> => {
   try {
-    console.log('🚀 Handler started:', { path: event.path, method: event.httpMethod });
+    const url = new URL(req.url || '', 'http://localhost');
+    const path = url.pathname;
+    const method = req.method || 'GET';
+    
+    console.log('🚀 Handler started:', { path, method });
     const apolloServer = await createApolloServer();
 
     // Handle GraphQL requests
-    if (event.path === "/graphql" || event.path === "/") {
+    if (path === "/graphql" || path === "/") {
       // Ensure we have the shared cache
       if (!globalCache) {
         throw new Error('Cache not initialized');

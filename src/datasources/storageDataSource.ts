@@ -4,6 +4,22 @@ import { config } from '../config';
 import { KeyValueDatabase } from './keyValueDatabase';
 import { BaseStorageDataSource } from './storageInterface';
 
+// No-op storage implementation for production (L2 cache disabled)
+class NoOpStorage extends BaseStorageDataSource {
+  async store(key: string, data: any, ttlHours: number = 24): Promise<void> {
+    // L2 cache disabled in production - no logging to reduce noise
+  }
+
+  async retrieve(key: string): Promise<any | null> {
+    // L2 cache disabled in production - always return null
+    return null;
+  }
+
+  async remove(key: string): Promise<void> {
+    // L2 cache disabled in production - no-op
+  }
+}
+
 export class StorageDataSource extends BaseStorageDataSource {
   private client: DynamoDBDocumentClient;
   private tablePrefix: string;
@@ -29,10 +45,29 @@ export class StorageDataSource extends BaseStorageDataSource {
    */
   static create(): BaseStorageDataSource {
     console.log(`🔧 Storage type configured as: ${config.storage.type}`);
+    
+    // Check if we're in production/Vercel - disable L2 cache completely
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+    
+    if (isProduction) {
+      console.log(`🚫 L2 Cache disabled in production - using NoOp storage`);
+      return new NoOpStorage();
+    }
+    
+    // Development environment - use configured storage
     if (config.storage.type === 'keyvalue') {
       console.log(`📁 Using KeyValue database for storage`);
       return new KeyValueDatabase();
     }
+    
+    // Check if DynamoDB credentials are available
+    const hasDynamoDBCredentials = config.aws.accessKeyId && config.aws.secretAccessKey;
+    
+    if (!hasDynamoDBCredentials) {
+      console.log(`🚫 DynamoDB credentials not available, disabling L2 cache`);
+      return new NoOpStorage();
+    }
+    
     console.log(`☁️ Using DynamoDB for storage`);
     return new StorageDataSource();
   }

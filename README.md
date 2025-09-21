@@ -24,7 +24,7 @@ A modern GraphQL proxy for the BoardGameGeek API built with TypeScript, Apollo S
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - Redis (Upstash Redis - free tier available)
 - Vercel account (for deployment)
 
@@ -207,15 +207,16 @@ See `infrastructure/` directory for CDK deployment scripts.
 
 ## Data Caching Strategy
 
-### Apollo RESTDataSource (L1 Cache)
+### Redis Cache (L1 Cache)
 - **TTL**: 5-60 minutes depending on data type
 - **Purpose**: Fast HTTP response caching
-- **Storage**: Built-in Apollo Server caching
+- **Storage**: Redis (Upstash) for all environments
 
-### DynamoDB (L2 Cache)
+### L2 Cache (Development Only)
 - **TTL**: 1-7 days depending on data type
 - **Purpose**: Persistent storage, reduces BGG API calls
-- **Storage**: Structured data with metadata
+- **Storage**: Local KeyValue database (development) or DynamoDB
+- **Production**: Disabled for simplicity and cost optimization
 
 ### Cache Invalidation
 - Automatic TTL expiration
