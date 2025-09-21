@@ -1,14 +1,13 @@
 # BGG GraphQL Proxy
 
-A modern GraphQL proxy for the BoardGameGeek API built with TypeScript, Apollo Server, Redis caching, and DynamoDB persistence. Designed for AWS deployment with cost-effective hosting.
+A modern GraphQL proxy for the BoardGameGeek API built with TypeScript, Apollo Server, and Redis caching. Designed for Vercel deployment with cost-effective hosting.
 
 ## Features
 
 - 🎮 **Complete BGG API Coverage**: Board games, users, collections, plays, geeklists, and more
 - 🚀 **GraphQL API**: Modern, type-safe API with introspection and playground
 - ⚡ **Redis Caching**: Fast, scalable caching with Redis
-- 💾 **Persistent Storage**: DynamoDB or KeyValue database for long-term storage
-- ☁️ **Serverless Ready**: Deploy to AWS Lambda, Vercel, Railway, Render
+- ☁️ **Vercel Ready**: Deploy to Vercel with minimal setup
 - 🔧 **TypeScript**: Full type safety and excellent developer experience
 - 📊 **Cost Effective**: Optimized for free hosting platforms
 
@@ -73,7 +72,8 @@ A modern GraphQL proxy for the BoardGameGeek API built with TypeScript, Apollo S
    - `STORAGE_TYPE=keyvalue`
 
 4. **Your API will be live at:**
-   - `https://your-project.vercel.app/graphql`
+   - `https://your-project.vercel.app/api/graphql`
+   - `https://your-project.vercel.app/api/health`
 
 ### Example Queries
 
@@ -148,62 +148,10 @@ query GetPlays {
 }
 ```
 
-## AWS Deployment
-
-### Option 1: Serverless Framework (Recommended)
-
-1. **Install Serverless Framework:**
-   ```bash
-   npm install -g serverless
-   npm install -D serverless-offline serverless-plugin-typescript
-   ```
-
-2. **Configure AWS credentials:**
-   ```bash
-   aws configure
-   ```
-
-3. **Set up Redis (ElastiCache):**
-   - Create ElastiCache Redis cluster
-   - Note the endpoint URL
-
-4. **Deploy:**
-   ```bash
-   # Deploy to dev stage
-   npm run build
-   serverless deploy
-
-   # Deploy to production
-   serverless deploy --stage prod
-   ```
-
-### Option 2: AWS CDK
-
-See `infrastructure/` directory for CDK deployment scripts.
-
-### Option 3: Manual AWS Setup
-
-1. **Create DynamoDB Tables:**
-   - Use the CloudFormation template in `infrastructure/`
-   - Or create tables manually with the schema from `serverless.yml`
-
-2. **Set up ElastiCache Redis:**
-   - Create Redis cluster
-   - Configure security groups
-
-3. **Deploy Lambda Function:**
-   - Build: `npm run build`
-   - Upload `dist/` folder to Lambda
-   - Configure environment variables
-
-
-
-
 ## API Endpoints
 
-- **GraphQL**: `/graphql`
-- **Health Check**: `/health`
-- **Root**: `/`
+- **GraphQL**: `/api/graphql`
+- **Health Check**: `/api/health`
 
 ## Data Caching Strategy
 
@@ -215,7 +163,7 @@ See `infrastructure/` directory for CDK deployment scripts.
 ### L2 Cache (Development Only)
 - **TTL**: 1-7 days depending on data type
 - **Purpose**: Persistent storage, reduces BGG API calls
-- **Storage**: Local KeyValue database (development) or DynamoDB
+- **Storage**: Local KeyValue database (development only)
 - **Production**: Disabled for simplicity and cost optimization
 
 ### Cache Invalidation
@@ -227,15 +175,15 @@ See `infrastructure/` directory for CDK deployment scripts.
 
 ### Project Structure
 ```
-src/
-├── config/          # Configuration
-├── resolvers/       # GraphQL resolvers
-├── schema/          # GraphQL schema
-├── services/        # Business logic
-│   ├── bgg-api.ts   # BGG API client
-│   ├── cache.ts     # Redis caching
-│   └── dynamodb.ts  # DynamoDB operations
-└── index.ts         # Main server file
+├── api/             # Vercel API functions
+│   ├── graphql.js   # GraphQL endpoint
+│   └── health.js    # Health check endpoint
+├── src/             # Source code
+│   ├── config/      # Configuration
+│   ├── resolvers/   # GraphQL resolvers
+│   ├── schema/      # GraphQL schema
+│   └── datasources/ # Data sources
+└── vercel.json      # Vercel configuration
 ```
 
 ### Available Scripts
@@ -262,4 +210,4 @@ MIT License - see LICENSE file for details.
 
 - [BoardGameGeek](https://boardgamegeek.com) for the amazing API
 - [Apollo Server](https://www.apollographql.com/docs/apollo-server/) for GraphQL
-- [Serverless Framework](https://serverless.com) for AWS deployment
+- [Vercel](https://vercel.com) for deployment
