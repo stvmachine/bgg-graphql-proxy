@@ -1,17 +1,13 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "dist/handler.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/graphql.js": {
+      "runtime": "nodejs20.x"
+    },
+    "api/health.js": {
+      "runtime": "nodejs20.x"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "dist/handler.js"
-    }
-  ],
+  },
   "env": {
     "NODE_ENV": "production"
   }

@@ -2,7 +2,7 @@
   "name": "bgg-graphql-proxy",
   "version": "1.0.0",
   "description": "GraphQL proxy for BoardGameGeek API built with TypeScript and Apollo Server",
-  "main": "dist/index.js",
+  "main": "api/graphql.js",
   "scripts": {
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
