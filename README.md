@@ -25,8 +25,8 @@ A modern GraphQL proxy for the BoardGameGeek API built with TypeScript, Apollo S
 ### Prerequisites
 
 - Node.js 18+
-- Redis (local or AWS ElastiCache)
-- AWS Account (for DynamoDB)
+- Redis (Upstash Redis - free tier available)
+- Vercel account (for deployment)
 
 ### Local Development
 
@@ -43,19 +43,37 @@ A modern GraphQL proxy for the BoardGameGeek API built with TypeScript, Apollo S
    # Edit .env with your configuration
    ```
 
-3. **Start Redis (using Docker):**
-   ```bash
-   docker run -d -p 6379:6379 redis:alpine
-   ```
-
-4. **Start the development server:**
+3. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-5. **Open GraphQL Playground:**
+4. **Open GraphQL Playground:**
    - Visit: http://localhost:4000/graphql
    - Explore the schema and run queries
+
+### Deploy to Vercel
+
+1. **Quick deployment:**
+   ```bash
+   ./deploy-vercel.sh
+   ```
+
+2. **Manual deployment:**
+   ```bash
+   npm install -g vercel
+   vercel login
+   vercel --prod
+   ```
+
+3. **Set environment variables in Vercel Dashboard:**
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+   - `NODE_ENV=production`
+   - `STORAGE_TYPE=keyvalue`
+
+4. **Your API will be live at:**
+   - `https://your-project.vercel.app/graphql`
 
 ### Example Queries
 

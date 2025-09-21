@@ -19,7 +19,7 @@ export class RedisCache {
       console.log(`🔍 Redis GET: ${key}`);
       const result = await redis.get(key);
       console.log(`🔍 Redis GET result: ${result ? 'found' : 'not found'}`);
-      return result;
+      return result as string | null;
     } catch (error) {
       console.error('Redis get error:', error);
       return null;
