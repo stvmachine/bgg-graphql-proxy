@@ -1,39 +1,26 @@
-import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
-import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import cors from "cors";
 import express from "express";
-import { readFileSync } from "fs";
 import helmet from "helmet";
 import http from "http";
-import { join } from "path";
 import { config } from "./config";
-import { BGGDataSource, MemoryCache, StorageDataSource } from "./datasources";
-import { ApolloContext, resolvers } from "./resolvers";
+import { MemoryCache } from "./datasources";
+import {
+  createDataSources,
+  createExpressApolloServer,
+  createHealthResponse,
+  createRootResponse,
+} from "./utils";
 
 async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
 
-  // Read GraphQL schema
-  const typeDefs = readFileSync(
-    join(__dirname, "../src/schema/schema.graphql"),
-    "utf8"
-  );
-
   // Create cache instance (use memory cache for development, Redis for production)
   const cache = new MemoryCache();
 
-  // Create Apollo Server
-  const server = new ApolloServer<ApolloContext>({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-    introspection: config.nodeEnv !== "production",
-    cache,
-  });
-
-  await server.start();
+  // Create Apollo Server using shared utility
+  const server = await createExpressApolloServer(httpServer, cache);
 
   // Apply middleware
   app.use(
@@ -52,12 +39,9 @@ async function startServer() {
     express.json(),
     expressMiddleware(server, {
       context: async ({ req }) => {
-        // Initialize data sources
-        const dataSources = {
-          bggAPI: new BGGDataSource(cache),
-          storage: StorageDataSource.create(),
-        };
-        
+        // Initialize data sources using shared utility
+        const dataSources = createDataSources(cache);
+
         console.log(`🔧 Data sources initialized:`, {
           bggAPI: 'BGGDataSource',
           storage: dataSources.storage.constructor.name
@@ -73,22 +57,14 @@ async function startServer() {
 
   // Health check endpoint
   app.get("/health", (req, res) => {
-    res.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      environment: config.nodeEnv,
-    });
+    res.json(createHealthResponse());
   });
 
   // Root endpoint
   app.get("/", (req, res) => {
+    const rootResponse = createRootResponse();
     res.json({
-      message: "BGG GraphQL Proxy API",
-      version: "1.0.0",
-      endpoints: {
-        graphql: "/graphql",
-        health: "/health",
-      },
+      ...rootResponse,
       documentation: "https://github.com/yourusername/bgg-graphql-proxy",
     });
   });
