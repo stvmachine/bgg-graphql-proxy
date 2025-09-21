@@ -1,12 +1,6 @@
-import { config } from '../src/config';
+// This file is deprecated - use dist/handler.js instead
+// The Vercel configuration now points to the built handler in dist/
 
-export default function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Content-Type', 'application/json');
-  
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: config.nodeEnv,
-  });
-}
+const handler = require('../dist/handler.js').default;
+
+module.exports = handler;
