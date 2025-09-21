@@ -34,10 +34,17 @@ async function createApolloServer(): Promise<ApolloServer<ApolloContext>> {
   }
 
   // Read GraphQL schema
-  const typeDefs = readFileSync(
-    join(__dirname, "../src/schema/schema.graphql"),
-    "utf8"
-  );
+  let typeDefs: string;
+  try {
+    typeDefs = readFileSync(
+      join(__dirname, "schema/schema.graphql"),
+      "utf8"
+    );
+    console.log('✅ GraphQL schema loaded successfully');
+  } catch (error) {
+    console.error('❌ Failed to load GraphQL schema:', error);
+    throw new Error('Failed to load GraphQL schema');
+  }
 
   // Create cache instance
   const cache = new MemoryCache();
@@ -62,6 +69,7 @@ export const handler = async (
   context: Context
 ): Promise<APIGatewayProxyResult> => {
   try {
+    console.log('🚀 Handler started:', { path: event.path, method: event.httpMethod });
     const apolloServer = await createApolloServer();
 
     // Handle GraphQL requests
