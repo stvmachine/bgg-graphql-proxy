@@ -72,7 +72,7 @@ const handler = async (
     const url = new URL(req.url || '', 'http://localhost');
     const path = url.pathname;
     const method = req.method || 'GET';
-    
+
     console.log('🚀 Handler started:', { path, method });
     const apolloServer = await createApolloServer();
 
@@ -82,7 +82,7 @@ const handler = async (
       if (!globalCache) {
         throw new Error('Cache not initialized');
       }
-      
+
       // Initialize data sources with shared cache
       const dataSources = {
         bggAPI: new BGGDataSource(globalCache),
@@ -97,19 +97,20 @@ const handler = async (
       let query = "";
       let variables = {};
 
-      if (event.httpMethod === "POST" && event.body) {
+      if (method === "POST" && req.body) {
         try {
-          const body = JSON.parse(event.body);
+          const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
           query = body.query || "";
           variables = body.variables || {};
         } catch (e) {
-          query = event.body;
+          query = req.body;
         }
-      } else if (event.httpMethod === "GET" && event.queryStringParameters) {
-        query = event.queryStringParameters.query || "";
-        if (event.queryStringParameters.variables) {
+      } else if (method === "GET" && req.query) {
+        query = Array.isArray(req.query.query) ? req.query.query[0] : req.query.query || "";
+        if (req.query.variables) {
           try {
-            variables = JSON.parse(event.queryStringParameters.variables);
+            const vars = Array.isArray(req.query.variables) ? req.query.variables[0] : req.query.variables;
+            variables = JSON.parse(vars);
           } catch (e) {
             // Ignore invalid variables
           }
@@ -117,16 +118,13 @@ const handler = async (
       }
 
       if (!query) {
-        return {
-          statusCode: 400,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-          body: JSON.stringify({
-            error: "No GraphQL query provided",
-          }),
-        };
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.status(400);
+        res.end(JSON.stringify({
+          error: "No GraphQL query provided",
+        }));
+        return;
       }
 
       // Execute GraphQL operation
@@ -140,91 +138,70 @@ const handler = async (
         }
       );
 
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "Content-Type",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        },
-        body: JSON.stringify(result),
-      };
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.status(200);
+      res.json(result);
     }
 
     // Handle health check
-    if (event.path === "/health") {
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-        body: JSON.stringify({
-          status: "ok",
-          timestamp: new Date().toISOString(),
-          environment: config.nodeEnv,
-        }),
-      };
+    if (path === "/health") {
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.status(200);
+      res.json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        environment: config.nodeEnv,
+      });
+      return;
     }
 
     // Handle root endpoint
-    if (event.path === "/" && event.httpMethod === "GET") {
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+    if (path === "/" && method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.status(200);
+      res.json({
+        message: "BGG GraphQL Proxy API",
+        version: "1.0.0",
+        endpoints: {
+          graphql: "/graphql",
+          health: "/health",
         },
-        body: JSON.stringify({
-          message: "BGG GraphQL Proxy API",
-          version: "1.0.0",
-          endpoints: {
-            graphql: "/graphql",
-            health: "/health",
-          },
-        }),
-      };
+      });
+      return;
     }
 
     // Handle OPTIONS requests for CORS
-    if (event.httpMethod === "OPTIONS") {
-      return {
-        statusCode: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "Content-Type",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        },
-        body: "",
-      };
+    if (method === "OPTIONS") {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.status(200);
+      res.end("");
+      return;
     }
 
     // 404 for other paths
-    return {
-      statusCode: 404,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        error: "Not Found",
-        message: `Path ${event.path} not found`,
-      }),
-    };
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.status(404);
+    res.json({
+      error: "Not Found",
+      message: `Path ${path} not found`,
+    });
   } catch (error) {
     console.error("Handler error:", error);
-    return {
-      statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        error: "Internal Server Error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      }),
-    };
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.status(500);
+    res.json({
+      error: "Internal Server Error",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
 
