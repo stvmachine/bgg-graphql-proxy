@@ -42,6 +42,13 @@ const handler = async (
     const method = req.method || 'GET';
 
     console.log('🚀 Handler started:', { path, method });
+    
+    // Handle OPTIONS requests for CORS (must be first)
+    if (method === "OPTIONS") {
+      handleCorsPreflight(res);
+      return;
+    }
+
     const apolloServer = await createApolloServer();
 
     // Handle GraphQL requests
@@ -103,12 +110,6 @@ const handler = async (
       setCorsHeaders(res);
       res.status(200);
       res.json(createRootResponse());
-      return;
-    }
-
-    // Handle OPTIONS requests for CORS
-    if (method === "OPTIONS") {
-      handleCorsPreflight(res);
       return;
     }
 
