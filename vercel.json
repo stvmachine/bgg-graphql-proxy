@@ -1,5 +1,25 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "dist/handler.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/graphql",
+      "dest": "/dist/handler.js"
+    },
+    {
+      "src": "/health",
+      "dest": "/dist/handler.js"
+    },
+    {
+      "src": "/",
+      "dest": "/dist/handler.js"
+    }
+  ],
   "env": {
     "NODE_ENV": "production"
   }
