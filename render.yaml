@@ -1,4 +1,16 @@
 services:
+  - type: pserv
+    name: bgg-postgres
+    env: docker
+    dockerfilePath: ./Dockerfile.postgres
+    envVars:
+      - key: POSTGRES_DB
+        value: bgg
+      - key: POSTGRES_USER
+        value: postgres
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+
   - type: web
     name: bgg-graphql-api
     env: docker
@@ -20,15 +32,3 @@ services:
         value: "*"
       - key: HASURA_GRAPHQL_ENABLED_LOG_TYPES
         value: "startup,http-log,webhook-log,websocket-log,query-log"
-
-  - type: pserv
-    name: bgg-postgres
-    env: docker
-    dockerfilePath: ./Dockerfile.postgres
-    envVars:
-      - key: POSTGRES_DB
-        value: bgg
-      - key: POSTGRES_USER
-        value: postgres
-      - key: POSTGRES_PASSWORD
-        generateValue: true
