@@ -36,6 +36,18 @@ const handler = async (
   req: VercelRequest,
   res: VercelResponse
 ): Promise<void> => {
+  // Prevent multiple responses
+  let responseSent = false;
+  const originalEnd = res.end;
+  res.end = function(data?: string) {
+    if (responseSent) {
+      console.log('⚠️ Attempted to send response after already sent');
+      return;
+    }
+    responseSent = true;
+    return originalEnd.call(this, data);
+  };
+
   try {
     const url = new URL(req.url || '', 'http://localhost');
     const path = url.pathname;
@@ -45,6 +57,14 @@ const handler = async (
     
     // Handle OPTIONS requests for CORS (must be first)
     if (method === "OPTIONS") {
+      console.log('🔧 Handling OPTIONS request for CORS');
+      
+      // Check for bypass token in headers
+      const bypassToken = req.headers?.['x-vercel-protection-bypass'];
+      if (bypassToken) {
+        console.log('🔑 Bypass token found in OPTIONS request');
+      }
+      
       handleCorsPreflight(res);
       return;
     }

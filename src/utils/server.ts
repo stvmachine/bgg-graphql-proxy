@@ -91,8 +91,9 @@ export async function createExpressApolloServer(httpServer: any, cache: MemoryCa
  */
 export function setCorsHeaders(res: VercelResponse): void {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-vercel-protection-bypass, x-vercel-set-bypass-cookie");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
 }
 
 /**
@@ -137,7 +138,7 @@ export function handleCorsPreflight(res: VercelResponse): void {
   setCorsHeaders(res);
   res.setHeader("Access-Control-Max-Age", "86400");
   res.status(200);
-  res.end("");
+  res.end();
 }
 
 /**
