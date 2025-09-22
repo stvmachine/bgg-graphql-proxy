@@ -1,213 +1,170 @@
 # BGG GraphQL Proxy
 
-A modern GraphQL proxy for the BoardGameGeek API built with TypeScript, Apollo Server, and Redis caching. Designed for Vercel deployment with cost-effective hosting.
+A simple and powerful GraphQL API for BoardGameGeek data, built with Hasura and PostgreSQL, deployed on Render.
 
-## Features
-
-- 🎮 **Complete BGG API Coverage**: Board games, users, collections, plays, geeklists, and more
-- 🚀 **GraphQL API**: Modern, type-safe API with introspection and playground
-- ⚡ **Redis Caching**: Fast, scalable caching with Redis
-- ☁️ **Vercel Ready**: Deploy to Vercel with minimal setup
-- 🔧 **TypeScript**: Full type safety and excellent developer experience
-- 📊 **Cost Effective**: Optimized for free hosting platforms
-
-## 📚 Documentation
-
-- [Complete Documentation](docs/README.md) - Full documentation index
-- [Setup & Configuration](docs/setup/) - Redis setup, environment variables, deployment
-- [Architecture & Design](docs/architecture/) - System architecture, caching strategy
-- [API Reference](docs/api/) - GraphQL schema, query examples
-- [Architecture Decision Records](docs/adr/) - Design decisions and rationale
-
-## Quick Start
-
-### Prerequisites
-
-- Node.js 20+
-- Redis (Upstash Redis - free tier available)
-- Vercel account (for deployment)
+## 🚀 Quick Start
 
 ### Local Development
 
-1. **Clone and install dependencies:**
+1. **Start the services:**
    ```bash
-   git clone <your-repo>
-   cd bgg-graphql-proxy
-   npm install
+   npm start
    ```
 
-2. **Set up environment variables:**
+2. **Install data fetcher dependencies:**
    ```bash
-   cp env.example .env
-   # Edit .env with your configuration
+   npm run install-deps
    ```
 
-3. **Start the development server:**
+3. **Fetch board game data:**
    ```bash
-   npm run dev
+   npm run fetch-data
    ```
 
-4. **Open GraphQL Playground:**
-   - Visit: http://localhost:4000/graphql
-   - Explore the schema and run queries
+4. **Access the API:**
+   - GraphQL endpoint: http://localhost:8080/v1/graphql
+   - Hasura Console: http://localhost:8080/console
+   - Admin secret: `myadminsecretkey`
 
-### Deploy to Vercel
+### Deploy to Render
 
-1. **Quick deployment:**
+1. **Push to GitHub:**
    ```bash
-   ./deploy-vercel.sh
+   git add .
+   git commit -m "Ready for Render deployment"
+   git push origin main
    ```
 
-2. **Manual deployment:**
-   ```bash
-   npm install -g vercel
-   vercel login
-   vercel --prod
-   ```
+2. **Deploy on Render:**
+   - Go to [render.com](https://render.com)
+   - Sign up with GitHub
+   - Click "New" → "Blueprint"
+   - Connect your GitHub repo
+   - Render will auto-detect `render.yaml`
+   - Click "Apply"
 
-3. **Set environment variables in Vercel Dashboard:**
-   - `UPSTASH_REDIS_REST_URL`
-   - `UPSTASH_REDIS_REST_TOKEN`
-   - `NODE_ENV=production`
-   - `STORAGE_TYPE=keyvalue`
+3. **Get your live API:**
+   - Web Service: `https://your-app-name.onrender.com`
+   - GraphQL: `https://your-app-name.onrender.com/v1/graphql`
+   - Console: `https://your-app-name.onrender.com/console`
 
-4. **Your API will be live at:**
-   - `https://your-project.vercel.app/api/graphql`
-   - `https://your-project.vercel.app/api/health`
+## 📊 What's Included
 
-### Example Queries
+- **PostgreSQL** database with board game data
+- **Hasura** GraphQL engine with auto-generated API
+- **Data fetcher** that populates the database from BGG API
+- **Docker Compose** for easy setup
 
+## 🎮 Sample Queries
+
+### Get Top Board Games
 ```graphql
-# Get a board game by ID
-query GetGame {
-  thing(id: "174430") {
+query GetTopGames {
+  things(
+    limit: 10
+    order_by: { average: desc }
+  ) {
     id
     name
-    yearPublished
-    minPlayers
-    maxPlayers
-    playingTime
-    description
+    year_published
     average
-    usersRated
-    categories {
-      value
-    }
-    mechanics {
-      value
-    }
-    designers {
-      value
-    }
+    users_rated
   }
 }
+```
 
-# Search for games
-query SearchGames {
-  search(query: "Wingspan", type: BOARDGAME) {
+### Search Games
+```graphql
+query SearchGames($search: String!) {
+  things(
+    where: { name: { _ilike: $search } }
+  ) {
     id
     name
-    yearPublished
+    year_published
     average
   }
 }
+```
 
-# Get user collection
-query GetCollection {
-  userCollection(username: "yourusername") {
-    totalItems
-    items {
-      name
-      yearPublished
-      status {
-        own
-        wantToPlay
-      }
-    }
-  }
-}
-
-# Get user plays
-query GetPlays {
-  userPlays(username: "yourusername", page: 1) {
-    total
-    plays {
-      date
-      quantity
-      location
-      item {
-        name
-      }
-      players {
-        username
-        score
-        win
-      }
-    }
+### Get Game Details
+```graphql
+query GetGameDetails($id: String!) {
+  things(where: { id: { _eq: $id } }) {
+    id
+    name
+    year_published
+    min_players
+    max_players
+    playing_time
+    average
+    categories { value }
+    mechanics { value }
+    designers { value }
   }
 }
 ```
 
-## API Endpoints
+## 🛠️ Available Scripts
 
-- **GraphQL**: `/api/graphql`
-- **Health Check**: `/api/health`
+- `npm start` - Start all services
+- `npm stop` - Stop all services
+- `npm restart` - Restart all services
+- `npm run logs` - View service logs
+- `npm run fetch-data` - Fetch data from BGG API
+- `npm run install-deps` - Install data fetcher dependencies
+- `npm run db-reset` - Reset database (removes all data)
+- `npm run hasura-console` - Open Hasura console
+- `npm run graphql-endpoint` - Show GraphQL endpoint URL
 
-## Data Caching Strategy
+## 📁 Project Structure
 
-### Redis Cache (L1 Cache)
-- **TTL**: 5-60 minutes depending on data type
-- **Purpose**: Fast HTTP response caching
-- **Storage**: Redis (Upstash) for all environments
-
-### L2 Cache (Development Only)
-- **TTL**: 1-7 days depending on data type
-- **Purpose**: Persistent storage, reduces BGG API calls
-- **Storage**: Local KeyValue database (development only)
-- **Production**: Disabled for simplicity and cost optimization
-
-### Cache Invalidation
-- Automatic TTL expiration
-- Smart cache keys based on query parameters
-- Built-in request deduplication
-
-## Development
-
-### Project Structure
 ```
-├── api/             # Vercel API functions
-│   ├── graphql.js   # GraphQL endpoint
-│   └── health.js    # Health check endpoint
-├── src/             # Source code
-│   ├── config/      # Configuration
-│   ├── resolvers/   # GraphQL resolvers
-│   ├── schema/      # GraphQL schema
-│   └── datasources/ # Data sources
-└── vercel.json      # Vercel configuration
+├── docker-compose.yml          # Local development setup
+├── Dockerfile                  # Main Hasura service
+├── Dockerfile.postgres         # PostgreSQL for Render
+├── render.yaml                 # Render deployment config
+├── hasura/
+│   ├── data-fetcher.js         # BGG API data fetcher
+│   ├── package.json            # Data fetcher dependencies
+│   └── migrations/
+│       └── 001_initial_schema/
+│           ├── up.sql          # Database schema
+│           └── down.sql        # Schema rollback
+├── scripts/
+│   └── fetch-data-render.js    # Render-specific data fetcher
+├── HASURA_README.md           # Detailed setup instructions
+├── HASURA_SUCCESS.md          # Implementation details
+└── README.md                  # This file
 ```
 
-### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production (includes codegen)
-- `npm run start` - Start production server
-- `npm run codegen` - Generate GraphQL types
-- `npm run codegen:watch` - Watch mode for codegen
-- `npm run type-check` - Type check without building
+## 🔧 Configuration
 
-## Contributing
+### Local Development
+Uses default values - no configuration needed!
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+### Render Deployment
+Environment variables are automatically set by Render:
+- `HASURA_GRAPHQL_DATABASE_URL` - Connected to Render PostgreSQL
+- `HASURA_GRAPHQL_ADMIN_SECRET` - Auto-generated
+- `HASURA_GRAPHQL_JWT_SECRET` - Auto-generated
+- `HASURA_GRAPHQL_CORS_DOMAIN` - Set to `*`
 
-## License
+## 📈 Benefits
 
-MIT License - see LICENSE file for details.
+- **Zero Code GraphQL**: Hasura auto-generates the entire API
+- **Real-time**: Built-in subscriptions
+- **Powerful Filtering**: Advanced queries and relationships
+- **Apollo Studio Compatible**: Full introspection support
+- **Simple Setup**: Just run `npm start`
 
-## Acknowledgments
+## 🎯 Next Steps
 
-- [BoardGameGeek](https://boardgamegeek.com) for the amazing API
-- [Apollo Server](https://www.apollographql.com/docs/apollo-server/) for GraphQL
-- [Vercel](https://vercel.com) for deployment
+1. Add more board game data
+2. Deploy to production
+3. Add authentication if needed
+4. Add monitoring and logging
+
+---
+
+**Note**: This project focuses on board game data only. No individual user data is stored.
