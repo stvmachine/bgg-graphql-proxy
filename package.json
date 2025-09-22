@@ -10,11 +10,13 @@
     "logs": "docker-compose logs -f",
     "fetch-data": "cd hasura && npm start",
     "fetch-data:render": "node scripts/fetch-data-render.js",
+    "fetch-data:supabase": "node scripts/fetch-data-supabase.js",
     "install-deps": "cd hasura && npm install",
     "db-reset": "docker-compose down -v && docker-compose up -d",
     "hasura-console": "echo 'Open http://localhost:8080/console'",
     "graphql-endpoint": "echo 'GraphQL endpoint: http://localhost:8080/v1/graphql'",
-    "render:deploy": "echo 'Deploy to Render: https://render.com'"
+    "render:deploy": "echo 'Deploy to Render: https://render.com'",
+    "supabase:setup": "echo 'Set up Supabase: https://supabase.com'"
   },
   "keywords": [
     "bgg",
