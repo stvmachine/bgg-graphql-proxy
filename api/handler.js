@@ -1,113 +1,30 @@
-const {
-  createDataSources,
-  createErrorResponse,
-  createHealthResponse,
-  createRootResponse,
-  createVercelApolloServer,
-  handleCorsPreflight,
-  parseGraphQLRequest,
-  setCorsHeaders,
-} = require("../dist/utils/server");
+const { ApolloServer } = require("@apollo/server");
+const { startServerAndCreateVercelHandler } = require("@apollo/server/vercel");
+const { readFileSync } = require("fs");
+const { join } = require("path");
+const { BGGDataSource } = require("../dist/datasources");
+const { resolvers } = require("../dist/resolvers");
 
-// Global server instance
-let server = null;
+// Load GraphQL schema
+const typeDefs = readFileSync(
+  join(__dirname, "../dist/schema/schema.graphql"),
+  "utf8"
+);
 
-async function createApolloServer() {
-  if (server) {
-    return server;
-  }
+// Create Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  introspection: true,
+});
 
-  // Create Apollo Server using shared utility (no cache)
-  server = await createVercelApolloServer();
-  return server;
-}
-
-// Vercel serverless function handler
-module.exports = async function handler(req, res) {
-  try {
-    const url = new URL(req.url || '', 'http://localhost');
-    const path = url.pathname;
-    const method = req.method || 'GET';
-
-    // Handle OPTIONS requests for CORS (must be first)
-    if (method === "OPTIONS") {
-      handleCorsPreflight(res);
-      return;
-    }
-
-    const apolloServer = await createApolloServer();
-
-    // Handle health check
-    if (path === "/health") {
-      res.setHeader("Content-Type", "application/json");
-      setCorsHeaders(res);
-      res.status(200);
-      res.end(JSON.stringify(createHealthResponse()));
-      return;
-    }
-
-    // Handle root endpoint
-    if (path === "/" && method === "GET") {
-      res.setHeader("Content-Type", "application/json");
-      setCorsHeaders(res);
-      res.status(200);
-      res.end(JSON.stringify(createRootResponse()));
-      return;
-    }
-
-    // Handle GraphQL requests
-    if (path === "/graphql") {
-      // Initialize data sources (no cache)
-      const dataSources = createDataSources();
-
-      const contextValue = {
-        dataSources,
-      };
-
-      // Parse GraphQL query from body or query parameters
-      const { query, variables } = parseGraphQLRequest(req);
-
-      if (!query) {
-        res.setHeader("Content-Type", "application/json");
-        setCorsHeaders(res);
-        res.status(400);
-        res.end(JSON.stringify({
-          error: "No GraphQL query provided",
-        }));
-        return;
-      }
-
-      // Execute GraphQL operation
-      const result = await apolloServer.executeOperation(
-        {
-          query,
-          variables,
-        },
-        {
-          contextValue,
-        }
-      );
-
-      res.setHeader("Content-Type", "application/json");
-      setCorsHeaders(res);
-      res.status(200);
-      res.end(JSON.stringify(result));
-      return;
-    }
-
-    // 404 for other paths
-    res.setHeader("Content-Type", "application/json");
-    setCorsHeaders(res);
-    res.status(404);
-    res.end(JSON.stringify({
-      error: "Not Found",
-      message: `Path ${path} not found`,
-    }));
-  } catch (error) {
-    console.error("Handler error:", error);
-    res.setHeader("Content-Type", "application/json");
-    setCorsHeaders(res);
-    res.status(500);
-    res.end(JSON.stringify(createErrorResponse(error)));
-  }
-};
+// Export the handler
+module.exports = startServerAndCreateVercelHandler(server, {
+  context: async () => ({
+    dataSources: {
+      bggAPI: new BGGDataSource(
+        process.env.BGG_API_BASE_URL || "https://boardgamegeek.com/xmlapi2"
+      ),
+    },
+  }),
+});
