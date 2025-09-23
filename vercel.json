@@ -4,13 +4,18 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
+  "functions": {
+    "src/api/handler.js": {
+      "runtime": "nodejs22.x"
+    }
+  },
   "routes": [
     {
       "src": "/graphql",
       "dest": "/src/api/handler"
     },
     {
-      "src": "/health", 
+      "src": "/health",
       "dest": "/src/api/handler"
     },
     {

@@ -1,7 +1,5 @@
-import { ApolloContext } from "../resolvers";
+import { VercelRequest, VercelResponse } from "../utils/server";
 import {
-  VercelRequest,
-  VercelResponse,
   createDataSources,
   createErrorResponse,
   createHealthResponse,
@@ -10,7 +8,7 @@ import {
   handleCorsPreflight,
   parseGraphQLRequest,
   setCorsHeaders,
-} from "./server";
+} from "../utils/server";
 
 // Global server instance
 let server: any = null;
@@ -25,52 +23,48 @@ async function createApolloServer(): Promise<any> {
   return server;
 }
 
-// Unified handler that works for both Express and Vercel
-export async function unifiedHandler(
+// Vercel serverless function handler
+export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ): Promise<void> {
-  // Prevent multiple responses
-  let responseSent = false;
-  const originalEnd = res.end;
-  res.end = function(data?: string) {
-    if (responseSent) {
-      console.log('⚠️ Attempted to send response after already sent');
-      return;
-    }
-    responseSent = true;
-    return originalEnd.call(this, data);
-  };
-
   try {
     const url = new URL(req.url || '', 'http://localhost');
     const path = url.pathname;
     const method = req.method || 'GET';
 
-    console.log('🚀 Handler started:', { path, method });
-    
     // Handle OPTIONS requests for CORS (must be first)
     if (method === "OPTIONS") {
-      console.log('🔧 Handling OPTIONS request for CORS');
-      
-      // Check for bypass token in headers
-      const bypassToken = req.headers?.['x-vercel-protection-bypass'];
-      if (bypassToken) {
-        console.log('🔑 Bypass token found in OPTIONS request');
-      }
-      
       handleCorsPreflight(res);
       return;
     }
 
     const apolloServer = await createApolloServer();
 
+    // Handle health check
+    if (path === "/health") {
+      res.setHeader("Content-Type", "application/json");
+      setCorsHeaders(res);
+      res.status(200);
+      res.end(JSON.stringify(createHealthResponse()));
+      return;
+    }
+
+    // Handle root endpoint
+    if (path === "/" && method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      setCorsHeaders(res);
+      res.status(200);
+      res.end(JSON.stringify(createRootResponse()));
+      return;
+    }
+
     // Handle GraphQL requests
-    if (path === "/graphql" || path === "/") {
+    if (path === "/graphql") {
       // Initialize data sources (no cache)
       const dataSources = createDataSources();
 
-      const contextValue: ApolloContext = {
+      const contextValue = {
         dataSources,
       };
 
@@ -101,24 +95,7 @@ export async function unifiedHandler(
       res.setHeader("Content-Type", "application/json");
       setCorsHeaders(res);
       res.status(200);
-      res.json(result);
-    }
-
-    // Handle health check
-    if (path === "/health") {
-      res.setHeader("Content-Type", "application/json");
-      setCorsHeaders(res);
-      res.status(200);
-      res.json(createHealthResponse());
-      return;
-    }
-
-    // Handle root endpoint
-    if (path === "/" && method === "GET") {
-      res.setHeader("Content-Type", "application/json");
-      setCorsHeaders(res);
-      res.status(200);
-      res.json(createRootResponse());
+      res.end(JSON.stringify(result));
       return;
     }
 
@@ -126,15 +103,15 @@ export async function unifiedHandler(
     res.setHeader("Content-Type", "application/json");
     setCorsHeaders(res);
     res.status(404);
-    res.json({
+    res.end(JSON.stringify({
       error: "Not Found",
       message: `Path ${path} not found`,
-    });
+    }));
   } catch (error) {
     console.error("Handler error:", error);
     res.setHeader("Content-Type", "application/json");
     setCorsHeaders(res);
     res.status(500);
-    res.json(createErrorResponse(error));
+    res.end(JSON.stringify(createErrorResponse(error)));
   }
 }
