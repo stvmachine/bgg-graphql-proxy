@@ -17,9 +17,10 @@ async function startServer() {
     origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Apollo-Require-Preflight']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Apollo-Require-Preflight', 'X-Requested-With']
   }));
   app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true }));
   
   // Handle OPTIONS requests for Apollo Studio
   app.options('/graphql', (req, res) => {
@@ -32,8 +33,16 @@ async function startServer() {
       method: req.method,
       headers: req.headers,
       body: req.body,
-      query: req.query
+      query: req.query,
+      url: req.url,
+      ip: req.ip
     });
+    
+    // Handle Apollo Studio specific headers
+    if (req.headers['apollo-require-preflight']) {
+      console.log('Apollo Studio preflight request detected');
+    }
+    
     next();
   });
   
