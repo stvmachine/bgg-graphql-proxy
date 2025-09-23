@@ -13,8 +13,29 @@ async function startServer() {
   const app = express();
   
   // Add CORS and JSON parsing middleware
-  app.use(cors());
-  app.use(express.json());
+  app.use(cors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Apollo-Require-Preflight']
+  }));
+  app.use(express.json({ limit: '10mb' }));
+  
+  // Handle OPTIONS requests for Apollo Studio
+  app.options('/graphql', (req, res) => {
+    res.status(200).end();
+  });
+
+  // Debug middleware
+  app.use('/graphql', (req, res, next) => {
+    console.log('GraphQL Request:', {
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+      query: req.query
+    });
+    next();
+  });
   
   const server = new ApolloServer({
     typeDefs,
