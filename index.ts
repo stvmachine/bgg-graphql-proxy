@@ -17,7 +17,17 @@ async function startServer() {
     origin: true, // Allow all origins for development and production
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Apollo-Require-Preflight', 'X-Requested-With']
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'Apollo-Require-Preflight', 
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers'
+    ],
+    exposedHeaders: ['Access-Control-Allow-Origin', 'Access-Control-Allow-Credentials']
   }));
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
@@ -55,6 +65,10 @@ async function startServer() {
         bggAPI: new BGGDataSource(process.env.BGG_API_BASE_URL || 'https://boardgamegeek.com/xmlapi2'),
       },
     }),
+    formatError: (error) => {
+      console.error('GraphQL Error:', error);
+      return error;
+    },
   });
 
   await server.start();
