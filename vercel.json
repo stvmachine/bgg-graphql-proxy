@@ -3,6 +3,11 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": null,
+  "functions": {
+    "dist/api/handler.js": {
+      "runtime": "nodejs22.x"
+    }
+  },
   "routes": [
     {
       "src": "/graphql",
