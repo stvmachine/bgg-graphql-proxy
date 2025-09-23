@@ -7,15 +7,15 @@
   "routes": [
     {
       "src": "/graphql",
-      "dest": "/src/api/handler"
+      "dest": "/dist/api/handler"
     },
     {
       "src": "/health",
-      "dest": "/src/api/handler"
+      "dest": "/dist/api/handler"
     },
     {
       "src": "/",
-      "dest": "/src/api/handler"
+      "dest": "/dist/api/handler"
     }
   ],
   "env": {
