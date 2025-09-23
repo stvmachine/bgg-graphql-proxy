@@ -5,22 +5,13 @@
   "framework": null,
   "functions": {
     "dist/api/handler.js": {
-      "runtime": "nodejs22.x"
+      "runtime": "nodejs20.x"
     }
   },
   "routes": [
-    {
-      "src": "/graphql",
-      "dest": "/dist/api/handler"
-    },
-    {
-      "src": "/health",
-      "dest": "/dist/api/handler"
-    },
-    {
-      "src": "/",
-      "dest": "/dist/api/handler"
-    }
+    { "src": "/graphql", "dest": "/dist/api/handler" },
+    { "src": "/health", "dest": "/dist/api/handler" },
+    { "src": "/", "dest": "/dist/api/handler" }
   ],
   "env": {
     "NODE_ENV": "production"
