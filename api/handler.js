@@ -10,8 +10,7 @@ const typeDefs = readFileSync(
   "utf8"
 );
 
-// Create Apollo Server
-const server = new ApolloServer({
+module.exports = new ApolloServer({
   typeDefs,
   resolvers,
   introspection: true,
@@ -23,7 +22,6 @@ const server = new ApolloServer({
       ),
     },
   }),
+}).createHandler({
+  path: "/api/graphql",
 });
-
-// Export the handler
-module.exports = server.createHandler({ path: "/api/graphql" });
