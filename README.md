@@ -1,211 +1,159 @@
 # BGG GraphQL Proxy
 
-<<<<<<< HEAD
-A GraphQL proxy for the BoardGameGeek API, deployed on Heroku.
+A GraphQL proxy for the BoardGameGeek API, built with Apollo Server v5 and deployed on Heroku.
 
-## Local Development
+## 🚀 Live API
 
+- **GraphQL Endpoint**: https://bgg-graphql-proxy-9baf44927986.herokuapp.com/graphql
+- **Health Check**: https://bgg-graphql-proxy-9baf44927986.herokuapp.com/health
+
+## 🛠️ Local Development
+
+### Prerequisites
+- Node.js 20+ 
+- npm
+
+### Setup
 ```bash
+# Install dependencies
 npm install
+
+# Build the project
 npm run build
-npm start
+
+# Start development server
+npm run dev
 ```
 
 The GraphQL endpoint will be available at `http://localhost:4000/graphql`
 
-## Heroku Deployment
+## 🚀 Heroku Deployment
 
-1. Install Heroku CLI
-2. Login to Heroku: `heroku login`
-3. Create app: `heroku create your-app-name`
-4. Deploy: `git push heroku main`
+### Prerequisites
+- Heroku CLI installed
+- Git repository
 
-## Environment Variables
+### Deploy
+```bash
+# Login to Heroku
+heroku login
 
+# Create Heroku app (if not already created)
+heroku create your-app-name
+
+# Deploy to Heroku
+git push heroku main
+```
+
+### Environment Variables
 - `BGG_API_BASE_URL` (optional): Defaults to `https://boardgamegeek.com/xmlapi2`
-=======
-A simple and powerful GraphQL API for BoardGameGeek data, built with Hasura and PostgreSQL, deployed on Render.
+- `NODE_ENV`: Set to `production` for production deployment
 
-## 🚀 Quick Start
->>>>>>> experimental
+## 📊 GraphQL Schema
 
-## GraphQL Endpoints
+The API provides access to BoardGameGeek data through a clean GraphQL interface:
 
-<<<<<<< HEAD
-- **Local**: `http://localhost:4000/graphql`
-- **Production**: `https://your-app-name.herokuapp.com/graphql`
+### Core Types
+- **Game**: Board game information
+- **Search**: Search functionality for games
+- **Thing**: Detailed game data from BGG
 
-## Example Query
-=======
-1. **Start the services:**
-   ```bash
-   npm start
-   ```
+## 🎮 Example Queries
 
-2. **Install data fetcher dependencies:**
-   ```bash
-   npm run install-deps
-   ```
-
-3. **Fetch board game data:**
-   ```bash
-   npm run fetch-data
-   ```
-
-4. **Access the API:**
-   - GraphQL endpoint: http://localhost:8080/v1/graphql
-   - Hasura Console: http://localhost:8080/console
-   - Admin secret: `myadminsecretkey`
-
-### Deploy to Render
-
-1. **Push to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Ready for Render deployment"
-   git push origin main
-   ```
-
-2. **Deploy on Render:**
-   - Go to [render.com](https://render.com)
-   - Sign up with GitHub
-   - Click "New" → "Blueprint"
-   - Connect your GitHub repo
-   - Render will auto-detect `render.yaml`
-   - Click "Apply"
-
-3. **Get your live API:**
-   - Web Service: `https://your-app-name.onrender.com`
-   - GraphQL: `https://your-app-name.onrender.com/v1/graphql`
-   - Console: `https://your-app-name.onrender.com/console`
-
-## 📊 What's Included
-
-- **PostgreSQL** database with board game data
-- **Hasura** GraphQL engine with auto-generated API
-- **Data fetcher** that populates the database from BGG API
-- **Docker Compose** for easy setup
->>>>>>> experimental
-
-## 🎮 Sample Queries
-
-### Get Top Board Games
+### Search for Games
 ```graphql
-<<<<<<< HEAD
-query {
+query SearchGames {
   search(query: "Catan") {
-=======
-query GetTopGames {
-  things(
-    limit: 10
-    order_by: { average: desc }
-  ) {
     id
     name
-    year_published
-    average
-    users_rated
+    yearPublished
+    minPlayers
+    maxPlayers
+    playingTime
+    averageRating
+    numRatings
   }
 }
-```
-
-### Search Games
-```graphql
-query SearchGames($search: String!) {
-  things(
-    where: { name: { _ilike: $search } }
-  ) {
->>>>>>> experimental
-    id
-    name
-    year_published
-    average
-  }
-}
-<<<<<<< HEAD
-```
-=======
 ```
 
 ### Get Game Details
 ```graphql
-query GetGameDetails($id: String!) {
-  things(where: { id: { _eq: $id } }) {
+query GetGameDetails {
+  thing(id: "13") {
     id
     name
-    year_published
-    min_players
-    max_players
-    playing_time
-    average
-    categories { value }
-    mechanics { value }
-    designers { value }
+    yearPublished
+    minPlayers
+    maxPlayers
+    playingTime
+    averageRating
+    numRatings
+    description
+    categories
+    mechanics
+    designers
+    artists
+    publishers
+  }
+}
+```
+
+### Get Top Rated Games
+```graphql
+query GetTopGames {
+  search(query: "top") {
+    id
+    name
+    yearPublished
+    averageRating
+    numRatings
   }
 }
 ```
 
 ## 🛠️ Available Scripts
 
-- `npm start` - Start all services
-- `npm stop` - Stop all services
-- `npm restart` - Restart all services
-- `npm run logs` - View service logs
-- `npm run fetch-data` - Fetch data from BGG API
-- `npm run install-deps` - Install data fetcher dependencies
-- `npm run db-reset` - Reset database (removes all data)
-- `npm run hasura-console` - Open Hasura console
-- `npm run graphql-endpoint` - Show GraphQL endpoint URL
+- `npm start` - Start production server
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build TypeScript to JavaScript
+- `npm run generate-types` - Generate TypeScript types from GraphQL schema
 
 ## 📁 Project Structure
 
 ```
-├── docker-compose.yml          # Local development setup
-├── Dockerfile                  # Main Hasura service
-├── Dockerfile.postgres         # PostgreSQL for Render
-├── render.yaml                 # Render deployment config
-├── hasura/
-│   ├── data-fetcher.js         # BGG API data fetcher
-│   ├── package.json            # Data fetcher dependencies
-│   └── migrations/
-│       └── 001_initial_schema/
-│           ├── up.sql          # Database schema
-│           └── down.sql        # Schema rollback
-├── scripts/
-│   └── fetch-data-render.js    # Render-specific data fetcher
-├── HASURA_README.md           # Detailed setup instructions
-├── HASURA_SUCCESS.md          # Implementation details
-└── README.md                  # This file
+├── src/
+│   ├── datasources/          # Data source implementations
+│   │   ├── bggDataSource.ts  # BGG API integration
+│   │   └── index.ts
+│   ├── resolvers/            # GraphQL resolvers
+│   │   └── index.ts
+│   ├── schema/               # GraphQL schema
+│   │   └── schema.graphql
+│   └── generated/             # Auto-generated types
+│       └── graphql.ts
+├── dist/                     # Compiled JavaScript
+├── index.ts                  # Main server file
+├── package.json
+├── tsconfig.json
+└── Procfile                  # Heroku deployment config
 ```
 
-## 🔧 Configuration
+## 🔧 Technology Stack
 
-### Local Development
-Uses default values - no configuration needed!
+- **Apollo Server v5**: GraphQL server with Express integration
+- **TypeScript**: Type-safe development
+- **Express**: Web framework
+- **CORS**: Cross-origin resource sharing
+- **Axios**: HTTP client for BGG API
+- **xml2js**: XML parsing for BGG responses
 
-### Render Deployment
-Environment variables are automatically set by Render:
-- `HASURA_GRAPHQL_DATABASE_URL` - Connected to Render PostgreSQL
-- `HASURA_GRAPHQL_ADMIN_SECRET` - Auto-generated
-- `HASURA_GRAPHQL_JWT_SECRET` - Auto-generated
-- `HASURA_GRAPHQL_CORS_DOMAIN` - Set to `*`
 
-## 📈 Benefits
+## 🎯 Usage with Apollo Studio
 
-- **Zero Code GraphQL**: Hasura auto-generates the entire API
-- **Real-time**: Built-in subscriptions
-- **Powerful Filtering**: Advanced queries and relationships
-- **Apollo Studio Compatible**: Full introspection support
-- **Simple Setup**: Just run `npm start`
-
-## 🎯 Next Steps
-
-1. Add more board game data
-2. Deploy to production
-3. Add authentication if needed
-4. Add monitoring and logging
+1. Go to [Apollo Studio](https://studio.apollographql.com/sandbox/explorer)
+2. Enter your endpoint: `https://bgg-graphql-proxy-9baf44927986.herokuapp.com/graphql`
+3. Start exploring the schema and running queries!
 
 ---
 
-**Note**: This project focuses on board game data only. No individual user data is stored.
->>>>>>> experimental
+**Note**: This is a proxy service for the BoardGameGeek API. All game data is sourced from BoardGameGeek.com.
