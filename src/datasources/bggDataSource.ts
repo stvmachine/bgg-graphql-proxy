@@ -1,8 +1,6 @@
 import { DataSource } from "apollo-datasource";
-import { KeyValueCache } from "apollo-server-caching";
 import * as xml2js from "xml2js";
 import axios from "axios";
-import { CACHE_CONFIG } from "../config/cache";
 import {
   Collection,
   Geeklist,
@@ -14,13 +12,11 @@ import {
 
 export class BGGDataSource extends DataSource {
   private xmlParser: xml2js.Parser;
-  private cache?: KeyValueCache<string>;
   private baseURL: string;
 
-  constructor(cache?: KeyValueCache<string>) {
+  constructor(baseURL: string) {
     super();
-    this.baseURL = "https://boardgamegeek.com/xmlapi2";
-    this.cache = cache;
+    this.baseURL = baseURL;
 
     this.xmlParser = new xml2js.Parser({
       explicitArray: false,
@@ -38,21 +34,9 @@ export class BGGDataSource extends DataSource {
     }
   }
 
-  private async makeRequest<T>(url: string, ttl?: number): Promise<T> {
+  private async makeRequest<T>(url: string): Promise<T> {
     try {
-      // Check L1 cache first
-      if (this.cache && ttl) {
-        const cacheKey = `bgg:${url}`;
-        console.log(`🔍 Checking cache for key: ${cacheKey}`);
-        const cached = await this.cache.get(cacheKey);
-        if (cached) {
-          console.log(`✅ Cache hit for key: ${cacheKey}`);
-          return JSON.parse(cached);
-        }
-        console.log(`❌ Cache miss for key: ${cacheKey}`);
-      }
-
-      // Make API request using axios
+      // Make API request using axios (no caching)
       const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
       
       const response = await axios.get(fullUrl, {
@@ -69,14 +53,6 @@ export class BGGDataSource extends DataSource {
         result = response.data;
       }
 
-      // Store in L1 cache
-      if (this.cache && ttl) {
-        const cacheKey = `bgg:${url}`;
-        console.log(`💾 Storing in cache: ${cacheKey} (TTL: ${ttl}s)`);
-        await this.cache.set(cacheKey, JSON.stringify(result), { ttl });
-        console.log(`✅ Stored in cache: ${cacheKey}`);
-      }
-
       return result;
     } catch (error) {
       console.error("BGG API request failed:", error);
@@ -91,8 +67,7 @@ export class BGGDataSource extends DataSource {
   // Thing operations
   async getThing(id: string): Promise<Thing | null> {
     const data = await this.makeRequest<any>(
-      `/thing?id=${id}&stats=1`,
-      CACHE_CONFIG.L1.THING
+      `/thing?id=${id}&stats=1`
     );
 
     // BGG API returns items directly as 'item', not nested under 'items'
@@ -105,8 +80,7 @@ export class BGGDataSource extends DataSource {
 
   async getThings(ids: string[]): Promise<Thing[]> {
     const data = await this.makeRequest<any>(
-      `/thing?id=${ids.join(",")}&stats=1`,
-      CACHE_CONFIG.L1.THING
+      `/thing?id=${ids.join(",")}&stats=1`
     );
 
     // BGG API returns items directly as 'item' array, not nested under 'items'
@@ -129,7 +103,7 @@ export class BGGDataSource extends DataSource {
     if (type) url += `&type=${type}`;
     if (exact) url += "&exact=1";
 
-    const data = await this.makeRequest<any>(url, CACHE_CONFIG.L1.SEARCH);
+    const data = await this.makeRequest<any>(url);
 
     // BGG API returns items directly as 'item' array, not nested under 'items'
     if (data?.item) {
@@ -145,8 +119,7 @@ export class BGGDataSource extends DataSource {
   // User operations
   async getUser(username: string): Promise<User | null> {
     const data = await this.makeRequest<any>(
-      `/user?name=${encodeURIComponent(username)}`,
-      CACHE_CONFIG.L1.USER
+      `/user?name=${encodeURIComponent(username)}`
     );
 
     // BGG API returns user data directly in the root object, not nested under 'user'
@@ -164,7 +137,7 @@ export class BGGDataSource extends DataSource {
     let url = `/collection?username=${encodeURIComponent(username)}`;
     if (subtype) url += `&subtype=${subtype}`;
 
-    const data = await this.makeRequest<any>(url, CACHE_CONFIG.L1.COLLECTION);
+    const data = await this.makeRequest<any>(url);
 
     if (data?.items) {
       return this.normalizeCollection(data);
@@ -188,7 +161,7 @@ export class BGGDataSource extends DataSource {
     if (params.maxdate) url += `&maxdate=${params.maxdate}`;
     if (params.page) url += `&page=${params.page}`;
 
-    const data = await this.makeRequest<any>(url, CACHE_CONFIG.L1.PLAYS);
+    const data = await this.makeRequest<any>(url);
 
     if (data?.plays?.play) {
       const plays = Array.isArray(data.plays.play)
@@ -203,8 +176,7 @@ export class BGGDataSource extends DataSource {
   // Geeklist operations
   async getGeeklist(id: string): Promise<Geeklist | null> {
     const data = await this.makeRequest<any>(
-      `/geeklist/${id}`,
-      CACHE_CONFIG.L1.GEEKLIST
+      `/geeklist/${id}`
     );
 
     if (data?.geeklist) {
@@ -216,8 +188,7 @@ export class BGGDataSource extends DataSource {
 
   async getGeeklists(username: string, page = 1): Promise<Geeklist[]> {
     const data = await this.makeRequest<any>(
-      `/geeklists/user/${encodeURIComponent(username)}?page=${page}`,
-      CACHE_CONFIG.L1.GEEKLISTS
+      `/geeklists/user/${encodeURIComponent(username)}?page=${page}`
     );
 
     if (data?.geeklists?.geeklist) {
@@ -235,7 +206,7 @@ export class BGGDataSource extends DataSource {
     let url = "/hot";
     if (type) url += `?type=${type}`;
 
-    const data = await this.makeRequest<any>(url, CACHE_CONFIG.L1.HOT_ITEMS);
+    const data = await this.makeRequest<any>(url);
 
     // BGG API returns items directly as 'item' array, not nested under 'items'
     if (data?.item) {
@@ -359,21 +330,6 @@ export class BGGDataSource extends DataSource {
     };
   }
 
-  // Cache management methods
-  async clearCache(): Promise<void> {
-    if (this.cache && "clear" in this.cache) {
-      await (this.cache as any).clear();
-      console.log("L1 cache cleared");
-    }
-  }
-
-  async clearCacheForUrl(url: string): Promise<void> {
-    if (this.cache) {
-      const cacheKey = `bgg:${url}`;
-      await this.cache.delete(cacheKey);
-      console.log(`L1 cache cleared for: ${url}`);
-    }
-  }
 
   // Helper functions for data parsing
   private parseNumber(value: any): number | undefined {

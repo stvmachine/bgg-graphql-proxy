@@ -4,7 +4,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin
 import { readFileSync } from "fs";
 import { join } from "path";
 import { config } from "../config";
-import { BGGDataSource, MemoryCache, StorageDataSource } from "../datasources";
+import { BGGDataSource } from "../datasources";
 import { ApolloContext, resolvers } from "../resolvers";
 
 // Vercel serverless function types
@@ -39,19 +39,18 @@ export function loadGraphQLSchema(): string {
 }
 
 /**
- * Creates data sources with the provided cache instance
+ * Creates data sources (simplified - no caching)
  */
-export function createDataSources(cache: MemoryCache) {
+export function createDataSources() {
   return {
-    bggAPI: new BGGDataSource(cache),
-    storage: StorageDataSource.create(),
+    bggAPI: new BGGDataSource(config.bgg.baseUrl),
   };
 }
 
 /**
  * Creates an Apollo Server instance for Vercel serverless functions
  */
-export async function createVercelApolloServer(cache: MemoryCache): Promise<ApolloServer<ApolloContext>> {
+export async function createVercelApolloServer(): Promise<ApolloServer<ApolloContext>> {
   const typeDefs = loadGraphQLSchema();
 
   const server = new ApolloServer<ApolloContext>({
@@ -61,7 +60,6 @@ export async function createVercelApolloServer(cache: MemoryCache): Promise<Apol
       ApolloServerPluginLandingPageLocalDefault({ embed: true }),
     ],
     introspection: true,
-    cache,
   });
 
   await server.start();
@@ -71,7 +69,7 @@ export async function createVercelApolloServer(cache: MemoryCache): Promise<Apol
 /**
  * Creates an Apollo Server instance for Express applications
  */
-export async function createExpressApolloServer(httpServer: any, cache: MemoryCache): Promise<ApolloServer<ApolloContext>> {
+export async function createExpressApolloServer(httpServer: any): Promise<ApolloServer<ApolloContext>> {
   const typeDefs = loadGraphQLSchema();
 
   const server = new ApolloServer<ApolloContext>({
@@ -79,7 +77,6 @@ export async function createExpressApolloServer(httpServer: any, cache: MemoryCa
     resolvers,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     introspection: config.nodeEnv !== "production",
-    cache,
   });
 
   await server.start();

@@ -1,4 +1,3 @@
-import { MemoryCache } from "./datasources";
 import { ApolloContext } from "./resolvers";
 import {
   VercelRequest,
@@ -16,19 +15,13 @@ import {
 // Global server instance
 let server: any = null;
 
-// Global cache instance
-let globalCache: MemoryCache | null = null;
-
 async function createApolloServer(): Promise<any> {
   if (server) {
     return server;
   }
 
-  // Create shared cache instance
-  globalCache = new MemoryCache();
-
-  // Create Apollo Server using shared utility
-  server = await createVercelApolloServer(globalCache);
+  // Create Apollo Server using shared utility (no cache)
+  server = await createVercelApolloServer();
   return server;
 }
 
@@ -73,13 +66,8 @@ const handler = async (
 
     // Handle GraphQL requests
     if (path === "/graphql" || path === "/") {
-      // Ensure we have the shared cache
-      if (!globalCache) {
-        throw new Error('Cache not initialized');
-      }
-
-      // Initialize data sources with shared cache
-      const dataSources = createDataSources(globalCache);
+      // Initialize data sources (no cache)
+      const dataSources = createDataSources();
 
       const contextValue: ApolloContext = {
         dataSources,

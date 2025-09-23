@@ -4,9 +4,8 @@ import express from "express";
 import helmet from "helmet";
 import http from "http";
 import { config } from "./config";
-import { MemoryCache } from "./datasources";
+import { BGGDataSource } from "./datasources";
 import {
-  createDataSources,
   createExpressApolloServer,
   createHealthResponse,
   createRootResponse,
@@ -16,11 +15,8 @@ async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
 
-  // Create cache instance (use memory cache for development, Redis for production)
-  const cache = new MemoryCache();
-
   // Create Apollo Server using shared utility
-  const server = await createExpressApolloServer(httpServer, cache);
+  const server = await createExpressApolloServer(httpServer);
 
   // Apply middleware
   app.use(
@@ -39,12 +35,13 @@ async function startServer() {
     express.json(),
     expressMiddleware(server, {
       context: async ({ req }) => {
-        // Initialize data sources using shared utility
-        const dataSources = createDataSources(cache);
+        // Initialize only BGG data source
+        const dataSources = {
+          bggAPI: new BGGDataSource(config.bgg.baseUrl),
+        };
 
         console.log(`🔧 Data sources initialized:`, {
-          bggAPI: 'BGGDataSource',
-          storage: dataSources.storage.constructor.name
+          bggAPI: 'BGGDataSource (direct API calls)'
         });
 
         return {
