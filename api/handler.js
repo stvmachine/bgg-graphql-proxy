@@ -1,5 +1,4 @@
-const { ApolloServer } = require("@apollo/server");
-const { startServerAndCreateVercelHandler } = require("@apollo/server/vercel");
+const { ApolloServer } = require("apollo-server-micro");
 const { readFileSync } = require("fs");
 const { join } = require("path");
 const { BGGDataSource } = require("../dist/datasources");
@@ -16,11 +15,8 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   introspection: true,
-});
-
-// Export the handler
-module.exports = startServerAndCreateVercelHandler(server, {
-  context: async () => ({
+  playground: true,
+  context: () => ({
     dataSources: {
       bggAPI: new BGGDataSource(
         process.env.BGG_API_BASE_URL || "https://boardgamegeek.com/xmlapi2"
@@ -28,3 +24,6 @@ module.exports = startServerAndCreateVercelHandler(server, {
     },
   }),
 });
+
+// Export the handler
+module.exports = server.createHandler({ path: "/api/graphql" });
