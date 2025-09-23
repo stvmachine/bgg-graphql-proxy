@@ -23,7 +23,7 @@
     "apollo-server-core": "^3.13.0",
     "axios": "^1.6.2",
     "graphql": "^16.8.1",
-    "micro": "^10.0.1",
+    "micro": "^9.4.1",
     "micro-cors": "^0.1.1",
     "xml2js": "^0.6.2"
   },
