@@ -1,4 +1,4 @@
-import { DataSource } from "apollo-datasource";
+import { RESTDataSource } from '@apollo/datasource-rest';
 import * as xml2js from "xml2js";
 import axios from "axios";
 import {
@@ -10,9 +10,9 @@ import {
   User,
 } from "../generated/graphql";
 
-export class BGGDataSource extends DataSource {
+export class BGGDataSource extends RESTDataSource {
+  override baseURL: string;
   private xmlParser: xml2js.Parser;
-  private baseURL: string;
 
   constructor(baseURL: string) {
     super();
@@ -38,7 +38,7 @@ export class BGGDataSource extends DataSource {
     try {
       // Make API request using axios (no caching)
       const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
-      
+
       const response = await axios.get(fullUrl, {
         timeout: 10000,
         headers: {
@@ -57,8 +57,7 @@ export class BGGDataSource extends DataSource {
     } catch (error) {
       console.error("BGG API request failed:", error);
       throw new Error(
-        `BGG API request failed: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `BGG API request failed: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -275,9 +274,9 @@ export class BGGDataSource extends DataSource {
       publisherId: user.publisherid?.value,
       address: user.stateorprovince || user.country
         ? {
-            city: user.stateorprovince?.value || "",
-            isoCountry: user.country?.value || "",
-          }
+          city: user.stateorprovince?.value || "",
+          isoCountry: user.country?.value || "",
+        }
         : undefined,
       guilds: [],
       microbadges: [],

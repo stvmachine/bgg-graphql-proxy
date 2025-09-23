@@ -1,83 +1,49 @@
-import { ApolloServer } from 'apollo-server-express';
-import express from 'express';
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { expressMiddleware } from '@as-integrations/express4';
 import cors from 'cors';
+import express from 'express';
 import { readFileSync } from 'fs';
+import http from 'http';
 import { join } from 'path';
 import { BGGDataSource } from './src/datasources/bggDataSource';
 import { resolvers } from './src/resolvers';
 
+interface ContextValue {
+  dataSources: {
+    bggAPI: BGGDataSource;
+  };
+}
 // Load GraphQL schema
 const typeDefs = readFileSync(join(__dirname, 'src/schema/schema.graphql'), 'utf8');
 
 async function startServer() {
   const app = express();
-  
-  // Add CORS and JSON parsing middleware
-  app.use(cors({
-    origin: true, // Allow all origins for development and production
-    credentials: true,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'Apollo-Require-Preflight', 
-      'X-Requested-With',
-      'Accept',
-      'Origin',
-      'Access-Control-Request-Method',
-      'Access-Control-Request-Headers'
-    ],
-    exposedHeaders: ['Access-Control-Allow-Origin', 'Access-Control-Allow-Credentials']
-  }));
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true }));
-  
-  // Handle OPTIONS requests for Apollo Studio
-  app.options('/graphql', (req, res) => {
-    res.status(200).end();
-  });
-
-  // Debug middleware
-  app.use('/graphql', (req, res, next) => {
-    console.log('GraphQL Request:', {
-      method: req.method,
-      headers: req.headers,
-      body: req.body,
-      query: req.query,
-      url: req.url,
-      ip: req.ip
-    });
-    
-    // Handle Apollo Studio specific headers
-    if (req.headers['apollo-require-preflight']) {
-      console.log('Apollo Studio preflight request detected');
-    }
-    
-    next();
-  });
-  
-  const server = new ApolloServer({
+  const httpServer = http.createServer(app);
+  const server = new ApolloServer<ContextValue>({
     typeDefs,
     resolvers,
     introspection: true,
-    context: () => ({
-      dataSources: {
-        bggAPI: new BGGDataSource(process.env.BGG_API_BASE_URL || 'https://boardgamegeek.com/xmlapi2'),
-      },
-    }),
-    formatError: (error) => {
-      console.error('GraphQL Error:', error);
-      return error;
-    },
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
   await server.start();
-  server.applyMiddleware({ app, path: '/graphql' } as any);
+
+  app.use('/graphql',
+    cors<cors.CorsRequest>(),
+    express.json(),
+    expressMiddleware(server, {
+      context: async () => ({
+        dataSources: {
+          bggAPI: new BGGDataSource(process.env.BGG_API_BASE_URL || 'https://boardgamegeek.com/xmlapi2'),
+        },
+      }),
+    }));
 
   // Health check endpoint
   app.get('/health', (req, res) => {
-    res.json({ 
-      status: 'ok', 
+    res.json({
+      status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime()
     });
@@ -94,10 +60,10 @@ async function startServer() {
   });
 
   const port = process.env.PORT || 4000;
-  
+
   app.listen(port, () => {
     console.log(`🚀 Server ready on port ${port}`);
-    console.log(`📊 GraphQL endpoint: ${server.graphqlPath}`);
+    console.log(`📊 GraphQL endpoint: /graphql`);
     console.log(`📊 Health check: /health`);
   });
 }

@@ -20,7 +20,9 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "apollo-server-express": "^3.12.1",
+    "@apollo/datasource-rest": "^6.4.1",
+    "@apollo/server": "^5.0.0",
+    "@as-integrations/express4": "^1.1.2",
     "axios": "^1.6.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
