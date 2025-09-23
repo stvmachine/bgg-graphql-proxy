@@ -1,5 +1,6 @@
 {
   "name": "bgg-graphql-proxy",
+<<<<<<< HEAD
   "version": "1.0.0",
   "description": "GraphQL proxy for BoardGameGeek API",
   "main": "dist/index.js",
@@ -8,17 +9,39 @@
     "dev": "tsx watch index.ts",
     "build": "tsc && cp -r src/schema dist/src/",
     "generate-types": "tsx scripts/generate-types.ts"
+=======
+  "version": "2.0.0",
+  "description": "BGG GraphQL Proxy using Hasura - Simple and powerful board game data API",
+  "main": "hasura/data-fetcher.js",
+  "scripts": {
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "restart": "docker-compose restart",
+    "logs": "docker-compose logs -f",
+    "fetch-data": "cd hasura && npm start",
+    "fetch-data:render": "node scripts/fetch-data-render.js",
+    "fetch-data:supabase": "node scripts/fetch-data-supabase.js",
+    "install-deps": "cd hasura && npm install",
+    "db-reset": "docker-compose down -v && docker-compose up -d",
+    "hasura-console": "echo 'Open http://localhost:8080/console'",
+    "graphql-endpoint": "echo 'GraphQL endpoint: http://localhost:8080/v1/graphql'",
+    "render:deploy": "echo 'Deploy to Render: https://render.com'",
+    "supabase:setup": "echo 'Set up Supabase: https://supabase.com'"
+>>>>>>> experimental
   },
   "keywords": [
     "bgg",
     "boardgamegeek",
     "graphql",
-    "apollo",
-    "typescript",
-    "proxy"
+    "hasura",
+    "proxy",
+    "docker",
+    "postgresql",
+    "render"
   ],
   "author": "Your Name",
   "license": "MIT",
+<<<<<<< HEAD
   "dependencies": {
     "apollo-server-express": "^3.12.1",
     "axios": "^1.6.2",
@@ -38,5 +61,15 @@
   },
   "engines": {
     "node": ">=20.0.0"
+=======
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3",
+    "xml2js": "^0.6.2"
+>>>>>>> experimental
   }
 }

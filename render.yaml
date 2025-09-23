@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: bgg-graphql-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: HASURA_GRAPHQL_DATABASE_URL
+        fromDatabase:
+          name: bgg-postgres
+          property: connectionString
+      - key: HASURA_GRAPHQL_ADMIN_SECRET
+        generateValue: true
+      - key: HASURA_GRAPHQL_JWT_SECRET
+        generateValue: true
+      - key: HASURA_GRAPHQL_ENABLE_CONSOLE
+        value: "true"
+      - key: HASURA_GRAPHQL_DEV_MODE
+        value: "false"
+      - key: HASURA_GRAPHQL_CORS_DOMAIN
+        value: "*"
+      - key: HASURA_GRAPHQL_ENABLED_LOG_TYPES
+        value: "startup,http-log,webhook-log,websocket-log,query-log"
+
+databases:
+  - name: bgg-postgres
+    databaseName: bgg

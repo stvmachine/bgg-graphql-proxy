@@ -1,0 +1,19 @@
+{
+  "name": "bgg-hasura-data-fetcher",
+  "version": "1.0.0",
+  "description": "Data fetcher for BGG data into Hasura",
+  "main": "data-fetcher.js",
+  "scripts": {
+    "start": "node data-fetcher.js",
+    "install-deps": "npm install"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.9"
+  }
+}
