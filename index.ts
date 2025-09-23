@@ -82,8 +82,9 @@ async function startServer() {
   const port = process.env.PORT || 4000;
   
   app.listen(port, () => {
-    console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`);
-    console.log(`📊 Health check: http://localhost:${port}/health`);
+    console.log(`🚀 Server ready on port ${port}`);
+    console.log(`📊 GraphQL endpoint: ${server.graphqlPath}`);
+    console.log(`📊 Health check: /health`);
   });
 }
 
