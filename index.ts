@@ -14,7 +14,7 @@ async function startServer() {
   
   // Add CORS and JSON parsing middleware
   app.use(cors({
-    origin: true,
+    origin: true, // Allow all origins for development and production
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Apollo-Require-Preflight', 'X-Requested-With']
