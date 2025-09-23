@@ -11,6 +11,9 @@ const typeDefs = readFileSync(join(__dirname, 'src/schema/schema.graphql'), 'utf
 async function startServer() {
   const app = express();
   
+  // Add JSON parsing middleware
+  app.use(express.json());
+  
   const server = new ApolloServer({
     typeDefs,
     resolvers,
