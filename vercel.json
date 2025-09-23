@@ -1,18 +1,16 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "dist/handler.js",
-      "use": "@vercel/node"
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": null,
   "routes": [
     {
       "src": "/graphql",
       "dest": "/dist/handler.js"
     },
     {
-      "src": "/health",
+      "src": "/health", 
       "dest": "/dist/handler.js"
     },
     {
