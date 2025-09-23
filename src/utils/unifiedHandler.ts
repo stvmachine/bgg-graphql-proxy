@@ -1,4 +1,4 @@
-import { ApolloContext } from "./resolvers";
+import { ApolloContext } from "../resolvers";
 import {
   VercelRequest,
   VercelResponse,
@@ -10,7 +10,7 @@ import {
   handleCorsPreflight,
   parseGraphQLRequest,
   setCorsHeaders,
-} from "./utils";
+} from "./server";
 
 // Global server instance
 let server: any = null;
@@ -25,10 +25,11 @@ async function createApolloServer(): Promise<any> {
   return server;
 }
 
-const handler = async (
+// Unified handler that works for both Express and Vercel
+export async function unifiedHandler(
   req: VercelRequest,
   res: VercelResponse
-): Promise<void> => {
+): Promise<void> {
   // Prevent multiple responses
   let responseSent = false;
   const originalEnd = res.end;
@@ -136,7 +137,4 @@ const handler = async (
     res.status(500);
     res.json(createErrorResponse(error));
   }
-};
-
-// Export as default for Vercel
-export default handler;
+}

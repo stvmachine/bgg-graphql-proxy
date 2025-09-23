@@ -1,69 +1,15 @@
-import { expressMiddleware } from "@apollo/server/express4";
-import cors from "cors";
 import express from "express";
-import helmet from "helmet";
 import http from "http";
 import { config } from "./config";
-import { BGGDataSource } from "./datasources";
-import {
-  createExpressApolloServer,
-  createHealthResponse,
-  createRootResponse,
-} from "./utils";
+import { unifiedHandler } from "./utils/unifiedHandler";
 
 async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
 
-  // Create Apollo Server using shared utility
-  const server = await createExpressApolloServer(httpServer);
-
-  // Apply middleware
-  app.use(
-    "/graphql",
-    cors<cors.CorsRequest>({
-      origin:
-        config.nodeEnv === "production"
-          ? ["https://yourdomain.com"] // Replace with your production domain
-          : true,
-      credentials: true,
-    }),
-    helmet({
-      contentSecurityPolicy:
-        config.nodeEnv === "production" ? undefined : false,
-    }),
-    express.json(),
-    expressMiddleware(server, {
-      context: async ({ req }) => {
-        // Initialize only BGG data source
-        const dataSources = {
-          bggAPI: new BGGDataSource(config.bgg.baseUrl),
-        };
-
-        console.log(`🔧 Data sources initialized:`, {
-          bggAPI: 'BGGDataSource (direct API calls)'
-        });
-
-        return {
-          req,
-          dataSources,
-        };
-      },
-    })
-  );
-
-  // Health check endpoint
-  app.get("/health", (req, res) => {
-    res.json(createHealthResponse());
-  });
-
-  // Root endpoint
-  app.get("/", (req, res) => {
-    const rootResponse = createRootResponse();
-    res.json({
-      ...rootResponse,
-      documentation: "https://github.com/yourusername/bgg-graphql-proxy",
-    });
+  // Use the unified handler for all routes
+  app.all("*", (req, res) => {
+    unifiedHandler(req as any, res as any);
   });
 
   const port = config.port;

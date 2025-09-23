@@ -1,5 +1,4 @@
 import { ApolloServer } from "@apollo/server";
-import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -66,22 +65,6 @@ export async function createVercelApolloServer(): Promise<ApolloServer<ApolloCon
   return server;
 }
 
-/**
- * Creates an Apollo Server instance for Express applications
- */
-export async function createExpressApolloServer(httpServer: any): Promise<ApolloServer<ApolloContext>> {
-  const typeDefs = loadGraphQLSchema();
-
-  const server = new ApolloServer<ApolloContext>({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-    introspection: config.nodeEnv !== "production",
-  });
-
-  await server.start();
-  return server;
-}
 
 /**
  * Sets common CORS headers for responses
