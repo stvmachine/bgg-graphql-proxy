@@ -1,5 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+import cors from 'cors';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { BGGDataSource } from './src/datasources/bggDataSource';
@@ -11,7 +12,8 @@ const typeDefs = readFileSync(join(__dirname, 'src/schema/schema.graphql'), 'utf
 async function startServer() {
   const app = express();
   
-  // Add JSON parsing middleware
+  // Add CORS and JSON parsing middleware
+  app.use(cors());
   app.use(express.json());
   
   const server = new ApolloServer({
@@ -28,10 +30,30 @@ async function startServer() {
   await server.start();
   server.applyMiddleware({ app, path: '/graphql' } as any);
 
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
+  // Root endpoint
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'BGG GraphQL Proxy',
+      graphql: '/graphql',
+      health: '/health',
+      documentation: 'https://github.com/stvmachine/bgg-graphql-proxy'
+    });
+  });
+
   const port = process.env.PORT || 4000;
   
   app.listen(port, () => {
     console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`);
+    console.log(`📊 Health check: http://localhost:${port}/health`);
   });
 }
 
