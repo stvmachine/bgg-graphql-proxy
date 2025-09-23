@@ -1,10 +1,13 @@
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { KeyvAdapter } from "@apollo/utils.keyvadapter";
 import { expressMiddleware } from '@as-integrations/express4';
+import KeyvRedis from "@keyv/redis";
 import cors from 'cors';
 import express from 'express';
 import { readFileSync } from 'fs';
 import http from 'http';
+import Keyv from "keyv";
 import { join } from 'path';
 import { BGGDataSource } from './src/datasources/bggDataSource';
 import { resolvers } from './src/resolvers';
@@ -17,6 +20,9 @@ interface ContextValue {
 // Load GraphQL schema
 const typeDefs = readFileSync(join(__dirname, 'src/schema/schema.graphql'), 'utf8');
 
+// Read Upstash Redis URL from environment
+const redisUrl = process.env.UPSTASH_REDIS_URL as string;
+
 async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
@@ -25,6 +31,9 @@ async function startServer() {
     resolvers,
     introspection: true,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    cache: new KeyvAdapter(
+      new Keyv(new KeyvRedis(redisUrl))
+    ),
   });
 
   await server.start();
