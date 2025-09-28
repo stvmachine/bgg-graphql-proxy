@@ -185,9 +185,29 @@ export type GuildMember = {
 export type Link = {
   __typename?: 'Link';
   id: Scalars['String']['output'];
+  isExpansionLink: Scalars['Boolean']['output'];
+  linkType: LinkType;
+  targetId: Scalars['String']['output'];
+  targetName: Scalars['String']['output'];
   type: Scalars['String']['output'];
   value: Scalars['String']['output'];
 };
+
+export enum LinkType {
+  BoardgameAccessory = 'BOARDGAME_ACCESSORY',
+  BoardgameArtist = 'BOARDGAME_ARTIST',
+  BoardgameBase = 'BOARDGAME_BASE',
+  BoardgameCategory = 'BOARDGAME_CATEGORY',
+  BoardgameDesigner = 'BOARDGAME_DESIGNER',
+  BoardgameExpansion = 'BOARDGAME_EXPANSION',
+  BoardgameFamily = 'BOARDGAME_FAMILY',
+  BoardgameMechanic = 'BOARDGAME_MECHANIC',
+  BoardgamePublisher = 'BOARDGAME_PUBLISHER',
+  Other = 'OTHER',
+  RpgItem = 'RPG_ITEM',
+  RpgPeriodical = 'RPG_PERIODICAL',
+  Videogame = 'VIDEOGAME'
+}
 
 export type Mechanic = {
   __typename?: 'Mechanic';
@@ -406,15 +426,19 @@ export type Thing = {
   artists: Array<Artist>;
   average?: Maybe<Scalars['Float']['output']>;
   averageWeight?: Maybe<Scalars['Float']['output']>;
+  baseGame?: Maybe<Thing>;
   bayesAverage?: Maybe<Scalars['Float']['output']>;
   categories: Array<Category>;
   comments: Array<Comment>;
   description?: Maybe<Scalars['String']['output']>;
   designers: Array<Designer>;
+  expansionFor: Array<Thing>;
   expansions: Array<Expansion>;
   families: Array<Family>;
   id: Scalars['ID']['output'];
   image?: Maybe<Scalars['String']['output']>;
+  isExpansion: Scalars['Boolean']['output'];
+  links: Array<Link>;
   maxPlayTime?: Maybe<Scalars['Int']['output']>;
   maxPlayers?: Maybe<Scalars['Int']['output']>;
   mechanics: Array<Mechanic>;
@@ -594,6 +618,7 @@ export type ResolversTypes = ResolversObject<{
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   JSON: ResolverTypeWrapper<Scalars['JSON']['output']>;
   Link: ResolverTypeWrapper<Link>;
+  LinkType: LinkType;
   Mechanic: ResolverTypeWrapper<Mechanic>;
   Microbadge: ResolverTypeWrapper<Microbadge>;
   Play: ResolverTypeWrapper<Play>;
@@ -851,6 +876,10 @@ export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 
 export type LinkResolvers<ContextType = ApolloContext, ParentType extends ResolversParentTypes['Link'] = ResolversParentTypes['Link']> = ResolversObject<{
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  isExpansionLink?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  linkType?: Resolver<ResolversTypes['LinkType'], ParentType, ContextType>;
+  targetId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  targetName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1007,15 +1036,19 @@ export type ThingResolvers<ContextType = ApolloContext, ParentType extends Resol
   artists?: Resolver<Array<ResolversTypes['Artist']>, ParentType, ContextType>;
   average?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   averageWeight?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  baseGame?: Resolver<Maybe<ResolversTypes['Thing']>, ParentType, ContextType>;
   bayesAverage?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   categories?: Resolver<Array<ResolversTypes['Category']>, ParentType, ContextType>;
   comments?: Resolver<Array<ResolversTypes['Comment']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   designers?: Resolver<Array<ResolversTypes['Designer']>, ParentType, ContextType>;
+  expansionFor?: Resolver<Array<ResolversTypes['Thing']>, ParentType, ContextType>;
   expansions?: Resolver<Array<ResolversTypes['Expansion']>, ParentType, ContextType>;
   families?: Resolver<Array<ResolversTypes['Family']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   image?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  isExpansion?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  links?: Resolver<Array<ResolversTypes['Link']>, ParentType, ContextType>;
   maxPlayTime?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   maxPlayers?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   mechanics?: Resolver<Array<ResolversTypes['Mechanic']>, ParentType, ContextType>;

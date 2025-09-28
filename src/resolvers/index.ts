@@ -81,4 +81,60 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
       return await dataSources.bggAPI.getHotItems(type || undefined);
     },
   },
+
+  Thing: {
+    // Resolve base game for expansions
+    baseGame: async (parent, _, { dataSources }) => {
+      if (!parent.isExpansion) {
+        return null;
+      }
+
+      // Find the base game link
+      const baseGameLink = parent.links?.find(link => 
+        link.linkType === 'BOARDGAME_BASE' || 
+        (link.type === 'boardgamebase' || link.type === 'boardgame')
+      );
+
+      if (baseGameLink) {
+        return await dataSources.bggAPI.getThing(baseGameLink.targetId);
+      }
+
+      return null;
+    },
+
+    // Resolve expansions for base games
+    expansionFor: async (parent, _, { dataSources }) => {
+      if (parent.isExpansion) {
+        return [];
+      }
+
+      // Find expansion links
+      const expansionLinks = parent.links?.filter(link => 
+        link.linkType === 'BOARDGAME_EXPANSION' || 
+        link.type === 'boardgameexpansion'
+      ) || [];
+
+      if (expansionLinks.length === 0) {
+        return [];
+      }
+
+      // Limit to first 20 expansions to avoid API limits
+      const limitedExpansionLinks = expansionLinks.slice(0, 20);
+      const expansionIds = limitedExpansionLinks.map(link => link.targetId);
+      
+      try {
+        // Fetch expansions in batches to avoid API limits
+        const expansions = [];
+        for (let i = 0; i < expansionIds.length; i += 5) {
+          const batch = expansionIds.slice(i, i + 5);
+          const batchExpansions = await dataSources.bggAPI.getThings(batch);
+          expansions.push(...batchExpansions);
+        }
+        return expansions;
+      } catch (error) {
+        console.error('Error fetching expansions:', error);
+        return [];
+      }
+    },
+  },
 };

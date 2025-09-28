@@ -55,6 +55,12 @@ type Thing {
   numComments: Int
   numWeights: Int
   averageWeight: Float
+  # Expansion relationship fields
+  isExpansion: Boolean!
+  baseGame: Thing
+  expansionFor: [Thing!]!
+  # Link information for relationships
+  links: [Link!]!
 }
 
 type Statistics {
@@ -175,6 +181,27 @@ type Link {
   type: String!
   id: String!
   value: String!
+  # Enhanced link information
+  linkType: LinkType!
+  targetId: String!
+  targetName: String!
+  isExpansionLink: Boolean!
+}
+
+enum LinkType {
+  BOARDGAME_EXPANSION
+  BOARDGAME_BASE
+  BOARDGAME_ACCESSORY
+  BOARDGAME_CATEGORY
+  BOARDGAME_MECHANIC
+  BOARDGAME_DESIGNER
+  BOARDGAME_ARTIST
+  BOARDGAME_PUBLISHER
+  BOARDGAME_FAMILY
+  RPG_ITEM
+  RPG_PERIODICAL
+  VIDEOGAME
+  OTHER
 }
 
 type User {

@@ -274,6 +274,9 @@ export class BGGDataSource extends RESTDataSource {
 
   // Normalization methods - simplified
   private normalizeThing(item: any): Thing {
+    const links = this.normalizeLinks(item.link || []);
+    const isExpansion = item.type === 'boardgameexpansion';
+    
     return {
       __typename: "Thing",
       id: item.id || "",
@@ -299,6 +302,11 @@ export class BGGDataSource extends RESTDataSource {
       numComments: this.parseNumber(item.statistics?.ratings?.numcomments),
       numWeights: this.parseNumber(item.statistics?.ratings?.numweights),
       averageWeight: this.parseFloat(item.statistics?.ratings?.averageweight),
+      // Expansion relationship fields
+      isExpansion,
+      baseGame: null, // Will be resolved by resolvers
+      expansionFor: [], // Will be resolved by resolvers
+      links,
       // Initialize empty arrays for complex fields
       artists: [],
       categories: [],
@@ -344,6 +352,41 @@ export class BGGDataSource extends RESTDataSource {
       pubDate: data.pubdate || "",
       items: data.items || [],
     };
+  }
+
+  private normalizeLinks(links: any[]): any[] {
+    if (!Array.isArray(links)) {
+      return [];
+    }
+
+    return links.map(link => ({
+      type: link.type || "",
+      id: link.id || "",
+      value: link.value || "",
+      linkType: this.mapLinkType(link.type),
+      targetId: link.id || "",
+      targetName: link.value || "",
+      isExpansionLink: link.type === 'boardgameexpansion'
+    }));
+  }
+
+  private mapLinkType(linkType: string): string {
+    const linkTypeMap: { [key: string]: string } = {
+      'boardgameexpansion': 'BOARDGAME_EXPANSION',
+      'boardgamebase': 'BOARDGAME_BASE',
+      'boardgameaccessory': 'BOARDGAME_ACCESSORY',
+      'boardgamecategory': 'BOARDGAME_CATEGORY',
+      'boardgamemechanic': 'BOARDGAME_MECHANIC',
+      'boardgamedesigner': 'BOARDGAME_DESIGNER',
+      'boardgameartist': 'BOARDGAME_ARTIST',
+      'boardgamepublisher': 'BOARDGAME_PUBLISHER',
+      'boardgamefamily': 'BOARDGAME_FAMILY',
+      'rpgitem': 'RPG_ITEM',
+      'rpgperiodical': 'RPG_PERIODICAL',
+      'videogame': 'VIDEOGAME'
+    };
+
+    return linkTypeMap[linkType] || 'OTHER';
   }
 
   private normalizePlay(play: any): Play {
