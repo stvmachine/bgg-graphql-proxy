@@ -7,7 +7,9 @@
     "start": "node dist/index.js",
     "dev": "tsx watch index.ts",
     "build": "tsc && cp -r src/schema dist/src/",
-    "generate-types": "tsx scripts/generate-types.ts"
+    "generate-types": "tsx scripts/generate-types.ts",
+    "test:expansions": "node test-expansions.js",
+    "test": "npm run test:expansions"
   },
   "keywords": [
     "bgg",

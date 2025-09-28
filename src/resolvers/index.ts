@@ -118,15 +118,15 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
         return [];
       }
 
-      // Limit to first 20 expansions to avoid API limits
-      const limitedExpansionLinks = expansionLinks.slice(0, 20);
+      // Limit to first 10 expansions to avoid API limits (BGG has a 20 item limit)
+      const limitedExpansionLinks = expansionLinks.slice(0, 10);
       const expansionIds = limitedExpansionLinks.map(link => link.targetId);
       
       try {
-        // Fetch expansions in batches to avoid API limits
+        // Fetch expansions in smaller batches to avoid API limits
         const expansions = [];
-        for (let i = 0; i < expansionIds.length; i += 5) {
-          const batch = expansionIds.slice(i, i + 5);
+        for (let i = 0; i < expansionIds.length; i += 3) {
+          const batch = expansionIds.slice(i, i + 3);
           const batchExpansions = await dataSources.bggAPI.getThings(batch);
           expansions.push(...batchExpansions);
         }

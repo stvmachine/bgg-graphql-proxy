@@ -1,0 +1,727 @@
+{
+  "info": {
+    "name": "BGG GraphQL Expansions Tests",
+    "description": "Comprehensive test suite for boardgame expansions functionality in the BGG GraphQL API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://bgg-graphql-proxy-9baf44927986.herokuapp.com",
+      "type": "string"
+    },
+    {
+      "key": "baseGameId",
+      "value": "13",
+      "type": "string"
+    },
+    {
+      "key": "expansionId",
+      "value": "926",
+      "type": "string"
+    },
+    {
+      "key": "anotherExpansionId",
+      "value": "325",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Health check returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Health check returns valid JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "pm.test('Health check contains status field', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('status');",
+              "    pm.expect(jsonData.status).to.eql('ok');",
+              "});",
+              "",
+              "pm.test('Health check contains uptime', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('uptime');",
+              "    pm.expect(jsonData.uptime).to.be.a('number');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Basic GraphQL Query",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"{ __typename }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('GraphQL endpoint returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('GraphQL response is valid JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "pm.test('GraphQL response has data field', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "    pm.expect(jsonData.data).to.have.property('__typename');",
+              "    pm.expect(jsonData.data.__typename).to.eql('Query');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Expansion Detection - Base Game",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { thing(id: \\\"{{baseGameId}}\\\") { id name isExpansion type } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Base game query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Base game is not an expansion', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.isExpansion).to.be.false;",
+              "});",
+              "",
+              "pm.test('Base game has correct type', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.type).to.eql('BOARDGAME');",
+              "});",
+              "",
+              "pm.test('Base game has name', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.name).to.be.a('string');",
+              "    pm.expect(jsonData.data.thing.name.length).to.be.greaterThan(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Expansion Detection - Expansion",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { thing(id: \\\"{{expansionId}}\\\") { id name isExpansion type } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Expansion query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Expansion is correctly identified', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.isExpansion).to.be.true;",
+              "});",
+              "",
+              "pm.test('Expansion has correct type', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.type).to.eql('BOARDGAMEEXPANSION');",
+              "});",
+              "",
+              "pm.test('Expansion has name', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.name).to.be.a('string');",
+              "    pm.expect(jsonData.data.thing.name.length).to.be.greaterThan(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Links Information",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { thing(id: \\\"{{baseGameId}}\\\") { id name links { type linkType targetName isExpansionLink } } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Links query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Links array exists', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.links).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Links array is not empty', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.links.length).to.be.greaterThan(0);",
+              "});",
+              "",
+              "pm.test('Links have required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const links = jsonData.data.thing.links;",
+              "    ",
+              "    links.forEach((link, index) => {",
+              "        pm.expect(link).to.have.property('type');",
+              "        pm.expect(link).to.have.property('linkType');",
+              "        pm.expect(link).to.have.property('targetName');",
+              "        pm.expect(link).to.have.property('isExpansionLink');",
+              "        pm.expect(link.isExpansionLink).to.be.a('boolean');",
+              "    });",
+              "});",
+              "",
+              "pm.test('Has expansion links', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const expansionLinks = jsonData.data.thing.links.filter(link => link.isExpansionLink);",
+              "    pm.expect(expansionLinks.length).to.be.greaterThan(0);",
+              "});",
+              "",
+              "pm.test('Has non-expansion links', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const nonExpansionLinks = jsonData.data.thing.links.filter(link => !link.isExpansionLink);",
+              "    pm.expect(nonExpansionLinks.length).to.be.greaterThan(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. ExpansionFor Field",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { thing(id: \\\"{{baseGameId}}\\\") { id name isExpansion expansionFor { id name isExpansion type } } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('ExpansionFor query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('ExpansionFor array exists', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.expansionFor).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('ExpansionFor array is not empty', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing.expansionFor.length).to.be.greaterThan(0);",
+              "});",
+              "",
+              "pm.test('All expansionFor items are expansions', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const expansions = jsonData.data.thing.expansionFor;",
+              "    ",
+              "    expansions.forEach((expansion, index) => {",
+              "        pm.expect(expansion.isExpansion).to.be.true;",
+              "        pm.expect(expansion.type).to.eql('BOARDGAMEEXPANSION');",
+              "    });",
+              "});",
+              "",
+              "pm.test('ExpansionFor items have required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const expansions = jsonData.data.thing.expansionFor;",
+              "    ",
+              "    expansions.forEach((expansion, index) => {",
+              "        pm.expect(expansion).to.have.property('id');",
+              "        pm.expect(expansion).to.have.property('name');",
+              "        pm.expect(expansion).to.have.property('isExpansion');",
+              "        pm.expect(expansion).to.have.property('type');",
+              "        pm.expect(expansion.name).to.be.a('string');",
+              "        pm.expect(expansion.name.length).to.be.greaterThan(0);",
+              "    });",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. BaseGame Field",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { thing(id: \\\"{{expansionId}}\\\") { id name isExpansion baseGame { id name isExpansion } } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('BaseGame query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('BaseGame field exists', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing).to.have.property('baseGame');",
+              "});",
+              "",
+              "pm.test('BaseGame is null or valid object', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const baseGame = jsonData.data.thing.baseGame;",
+              "    ",
+              "    if (baseGame !== null) {",
+              "        pm.expect(baseGame).to.be.an('object');",
+              "        pm.expect(baseGame).to.have.property('id');",
+              "        pm.expect(baseGame).to.have.property('name');",
+              "        pm.expect(baseGame).to.have.property('isExpansion');",
+              "        pm.expect(baseGame.isExpansion).to.be.false;",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Search with Expansions",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { search(query: \\\"Catan\\\") { id name type isExpansion } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Search query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Search results array exists', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.search).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Search results are not empty', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.search.length).to.be.greaterThan(0);",
+              "});",
+              "",
+              "pm.test('Search results have required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const results = jsonData.data.search;",
+              "    ",
+              "    results.forEach((result, index) => {",
+              "        pm.expect(result).to.have.property('id');",
+              "        pm.expect(result).to.have.property('name');",
+              "        pm.expect(result).to.have.property('type');",
+              "        pm.expect(result).to.have.property('isExpansion');",
+              "        pm.expect(result.isExpansion).to.be.a('boolean');",
+              "    });",
+              "});",
+              "",
+              "pm.test('Search contains both base games and expansions', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const results = jsonData.data.search;",
+              "    ",
+              "    const baseGames = results.filter(item => !item.isExpansion);",
+              "    const expansions = results.filter(item => item.isExpansion);",
+              "    ",
+              "    pm.expect(baseGames.length).to.be.greaterThan(0);",
+              "    pm.expect(expansions.length).to.be.greaterThan(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Collection with Expansions",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { userCollection(username: \\\"Aldie\\\") { totalItems items { objectId name subtype } } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Collection query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Collection response is valid', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.userCollection).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Collection has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const collection = jsonData.data.userCollection;",
+              "    ",
+              "    pm.expect(collection).to.have.property('totalItems');",
+              "    pm.expect(collection).to.have.property('items');",
+              "    pm.expect(collection.totalItems).to.be.a('number');",
+              "    pm.expect(collection.items).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Collection items have required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const items = jsonData.data.userCollection.items;",
+              "    ",
+              "    items.forEach((item, index) => {",
+              "        pm.expect(item).to.have.property('objectId');",
+              "        pm.expect(item).to.have.property('name');",
+              "        pm.expect(item).to.have.property('subtype');",
+              "    });",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Multiple Expansions Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { things(ids: [\\\"{{baseGameId}}\\\", \\\"{{expansionId}}\\\", \\\"{{anotherExpansionId}}\\\"]) { id name isExpansion type } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Multiple things query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Multiple things array exists', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.things).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Multiple things array has correct length', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.things.length).to.eql(3);",
+              "});",
+              "",
+              "pm.test('Multiple things have required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const things = jsonData.data.things;",
+              "    ",
+              "    things.forEach((thing, index) => {",
+              "        pm.expect(thing).to.have.property('id');",
+              "        pm.expect(thing).to.have.property('name');",
+              "        pm.expect(thing).to.have.property('isExpansion');",
+              "        pm.expect(thing).to.have.property('type');",
+              "        pm.expect(thing.isExpansion).to.be.a('boolean');",
+              "    });",
+              "});",
+              "",
+              "pm.test('Contains base game and expansions', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const things = jsonData.data.things;",
+              "    ",
+              "    const baseGames = things.filter(thing => !thing.isExpansion);",
+              "    const expansions = things.filter(thing => thing.isExpansion);",
+              "    ",
+              "    pm.expect(baseGames.length).to.be.greaterThan(0);",
+              "    pm.expect(expansions.length).to.be.greaterThan(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Error Handling Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { thing(id: \\\"999999999\\\") { id name isExpansion } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Invalid ID query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Invalid ID returns null', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.thing).to.be.null;",
+              "});",
+              "",
+              "pm.test('No errors in response', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.not.have.property('errors');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Performance Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { thing(id: \\\"{{baseGameId}}\\\") { id name isExpansion expansionFor { id name isExpansion } links { type linkType targetName isExpansionLink } } }\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/graphql",
+          "host": ["{{baseUrl}}"],
+          "path": ["graphql"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Complex query returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response time is acceptable', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+              "});",
+              "",
+              "pm.test('Complex query has all fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const thing = jsonData.data.thing;",
+              "    ",
+              "    pm.expect(thing).to.have.property('id');",
+              "    pm.expect(thing).to.have.property('name');",
+              "    pm.expect(thing).to.have.property('isExpansion');",
+              "    pm.expect(thing).to.have.property('expansionFor');",
+              "    pm.expect(thing).to.have.property('links');",
+              "    pm.expect(thing.expansionFor).to.be.an('array');",
+              "    pm.expect(thing.links).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for request tracking",
+          "pm.globals.set('requestTimestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test for response time",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(15000);",
+          "});",
+          "",
+          "// Global test for no server errors",
+          "pm.test('No server errors (5xx)', function () {",
+          "    pm.expect(pm.response.code).to.not.be.oneOf([500, 501, 502, 503, 504, 505]);",
+          "});"
+        ]
+      }
+    }
+  ]
+}
