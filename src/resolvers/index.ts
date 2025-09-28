@@ -96,7 +96,12 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
       );
 
       if (baseGameLink) {
-        return await dataSources.bggAPI.getThing(baseGameLink.targetId);
+        try {
+          return await dataSources.bggAPI.getThing(baseGameLink.targetId);
+        } catch (error) {
+          console.error('Error fetching base game:', error);
+          return null;
+        }
       }
 
       return null;
