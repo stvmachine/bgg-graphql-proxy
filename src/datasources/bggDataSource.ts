@@ -133,9 +133,63 @@ export class BGGDataSource extends RESTDataSource {
     username: string,
     subtype?: string
   ): Promise<Collection | null> {
+    // Handle the BGG API bug where subtype=boardgame returns both boardgames and expansions
+    // but incorrectly labels expansions as subtype=boardgame
+    if (!subtype || subtype === 'boardgame') {
+      return this.getUserCollectionWithExpansionWorkaround(username);
+    }
+
+    // For other subtypes, use the normal approach
     let url = `/collection?username=${encodeURIComponent(username)}`;
     if (subtype) url += `&subtype=${subtype}`;
 
+    const data = await this.makeRequest<any>(url);
+
+    if (data?.items) {
+      return this.normalizeCollection(data);
+    }
+
+    return null;
+  }
+
+  private async getUserCollectionWithExpansionWorkaround(
+    username: string
+  ): Promise<Collection | null> {
+    try {
+      // First call: Get boardgames only (excluding expansions)
+      const boardgamesUrl = `/collection?username=${encodeURIComponent(username)}&excludesubtype=boardgameexpansion`;
+      const boardgamesData = await this.makeRequest<any>(boardgamesUrl);
+
+      // Second call: Get expansions only
+      const expansionsUrl = `/collection?username=${encodeURIComponent(username)}&subtype=boardgameexpansion`;
+      const expansionsData = await this.makeRequest<any>(expansionsUrl);
+
+      // Combine the results
+      const allItems = [
+        ...(boardgamesData?.items || []),
+        ...(expansionsData?.items || [])
+      ];
+
+      // Create combined collection data
+      const combinedData = {
+        totalitems: (boardgamesData?.totalitems || 0) + (expansionsData?.totalitems || 0),
+        pubdate: boardgamesData?.pubdate || expansionsData?.pubdate || "",
+        items: allItems
+      };
+
+      return this.normalizeCollection(combinedData);
+    } catch (error) {
+      console.error("Error fetching collection with expansion workaround:", error);
+      // Fallback to original method if workaround fails
+      return this.getUserCollectionFallback(username);
+    }
+  }
+
+  private async getUserCollectionFallback(
+    username: string
+  ): Promise<Collection | null> {
+    // Fallback to original method if workaround fails
+    const url = `/collection?username=${encodeURIComponent(username)}`;
     const data = await this.makeRequest<any>(url);
 
     if (data?.items) {
