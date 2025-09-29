@@ -1,11 +1,12 @@
 # BGG GraphQL Proxy
 
-A GraphQL proxy for the BoardGameGeek API, built with Apollo Server v5 and deployed on Heroku.
+A GraphQL proxy for the BoardGameGeek API, built with Apollo Server v4 and deployed on Vercel.
 
 ## 🚀 Live API
 
-- **GraphQL Endpoint**: https://bgg-graphql-proxy-9baf44927986.herokuapp.com/graphql
-- **Health Check**: https://bgg-graphql-proxy-9baf44927986.herokuapp.com/health
+- **GraphQL Endpoint**: `https://your-project.vercel.app/graphql`
+- **Health Check**: `https://your-project.vercel.app/health`
+- **Root**: `https://your-project.vercel.app/`
 
 ## 🛠️ Local Development
 
@@ -27,27 +28,29 @@ npm run dev
 
 The GraphQL endpoint will be available at `http://localhost:4000/graphql`
 
-## 🚀 Heroku Deployment
+## 🚀 Vercel Deployment
 
 ### Prerequisites
-- Heroku CLI installed
+- Vercel CLI installed
 - Git repository
 
 ### Deploy
 ```bash
-# Login to Heroku
-heroku login
+# Install Vercel CLI
+npm install -g vercel
 
-# Create Heroku app (if not already created)
-heroku create your-app-name
+# Login to Vercel
+vercel login
 
-# Deploy to Heroku
-git push heroku main
+# Deploy to Vercel
+vercel --prod
 ```
 
 ### Environment Variables
+Set these in your Vercel dashboard:
+- `REDIS_URL` (optional): Your Redis connection string for caching
 - `BGG_API_BASE_URL` (optional): Defaults to `https://boardgamegeek.com/xmlapi2`
-- `NODE_ENV`: Set to `production` for production deployment
+- `NODE_ENV`: Automatically set to `production` by Vercel
 
 ## 📊 GraphQL Schema
 
@@ -116,6 +119,7 @@ query GetTopGames {
 - `npm start` - Start production server
 - `npm run dev` - Start development server with hot reload
 - `npm run build` - Build TypeScript to JavaScript
+- `npm run vercel-build` - Build for Vercel deployment
 - `npm run generate-types` - Generate TypeScript types from GraphQL schema
 
 ## 📁 Project Structure
@@ -133,16 +137,18 @@ query GetTopGames {
 │       └── graphql.ts
 ├── dist/                     # Compiled JavaScript
 ├── index.ts                  # Main server file
+├── vercel.json               # Vercel deployment config
 ├── package.json
-├── tsconfig.json
-└── Procfile                  # Heroku deployment config
+└── tsconfig.json
 ```
 
 ## 🔧 Technology Stack
 
-- **Apollo Server v5**: GraphQL server with Express integration
+- **Apollo Server v4**: GraphQL server with Express integration
 - **TypeScript**: Type-safe development
 - **Express**: Web framework
+- **Vercel**: Serverless deployment platform
+- **Redis**: Caching layer (optional)
 - **CORS**: Cross-origin resource sharing
 - **Axios**: HTTP client for BGG API
 - **xml2js**: XML parsing for BGG responses
@@ -151,8 +157,12 @@ query GetTopGames {
 ## 🎯 Usage with Apollo Studio
 
 1. Go to [Apollo Studio](https://studio.apollographql.com/sandbox/explorer)
-2. Enter your endpoint: `https://bgg-graphql-proxy-9baf44927986.herokuapp.com/graphql`
+2. Enter your endpoint: `https://your-project.vercel.app/graphql`
 3. Start exploring the schema and running queries!
+
+## 📚 Additional Documentation
+
+- [Vercel Deployment Guide](./VERCEL_DEPLOYMENT.md) - Detailed Vercel deployment instructions
 
 ---
 
