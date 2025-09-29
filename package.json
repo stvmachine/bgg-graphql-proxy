@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "tsx watch index.ts",
-    "build": "tsc && cp -r src/schema dist/src/",
+    "build": "tsc",
+    "vercel-build": "tsc",
     "generate-types": "tsx scripts/generate-types.ts",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -25,9 +26,9 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
+    "@apollo/server": "^4.9.5",
     "@apollo/datasource-rest": "^6.4.1",
-    "@apollo/server": "^5.0.0",
-    "@apollo/server-plugin-response-cache": "^5.0.0",
+    "@apollo/server-plugin-response-cache": "^4.0.0",
     "@apollo/utils.keyvadapter": "^4.0.1",
     "@as-integrations/express4": "^1.1.2",
     "@keyv/redis": "^5.1.2",
@@ -36,7 +37,8 @@
     "express": "^4.18.2",
     "graphql": "^16.8.1",
     "keyv": "^5.5.2",
-    "xml2js": "^0.6.2"
+    "xml2js": "^0.6.2",
+    "@vercel/node": "^3.0.0"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.0",

@@ -15,8 +15,8 @@ type Query {
   geeklist(id: ID!): Geeklist @cacheControl(maxAge: 1800) # Cache for 30 minutes
   geeklists(username: String, page: Int): [Geeklist!]! @cacheControl(maxAge: 1800) # Cache for 30 minutes
   
-  # Hot items - cache for 1 hour since they change less frequently
-  hotItems(type: ThingType): [Thing!]! @cacheControl(maxAge: 3600)
+  # Hot items - cache for 24 hour since they change less frequently
+  hotItems(type: ThingType): [Thing!]! @cacheControl(maxAge: 864000)
 }
 
 type Thing {
