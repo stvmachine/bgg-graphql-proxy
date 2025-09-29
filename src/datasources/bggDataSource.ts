@@ -13,6 +13,10 @@ import {
 export class BGGDataSource extends RESTDataSource {
   override baseURL: string;
   private xmlParser: xml2js.Parser;
+  private lastRequestTime: number = 0;
+  private readonly RATE_LIMIT_DELAY = 5000; // 5 seconds as per BGG API docs
+  private readonly MAX_RETRIES = 3;
+  private readonly RETRY_DELAYS = [1000, 2000, 4000]; // Exponential backoff delays
 
   constructor(baseURL: string) {
     super();
@@ -34,33 +38,104 @@ export class BGGDataSource extends RESTDataSource {
     }
   }
 
-  private async makeRequest<T>(url: string): Promise<T> {
-    try {
-      // Make API request using axios (no caching)
-      const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
-
-      const response = await axios.get(fullUrl, {
-        timeout: 10000,
-        headers: {
-          'User-Agent': 'BGG-GraphQL-Proxy/1.0.0',
-        },
-      });
-
-      let result: T;
-      if (typeof response.data === "string") {
-        result = await this.parseXML(response.data);
-      } else {
-        result = response.data;
-      }
-
-      return result;
-    } catch (error) {
-      console.error("BGG API request failed:", error);
-      throw new Error(
-        `BGG API request failed: ${error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+  private async enforceRateLimit(): Promise<void> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.RATE_LIMIT_DELAY) {
+      const waitTime = this.RATE_LIMIT_DELAY - timeSinceLastRequest;
+      console.log(`Rate limiting: waiting ${waitTime}ms before next request`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
     }
+    
+    this.lastRequestTime = Date.now();
+  }
+
+  private async sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private isRetryableError(error: any): boolean {
+    if (!error || typeof error !== 'object') return false;
+    
+    // Check for rate limiting errors (502, 503, 429)
+    if (error.response?.status === 502 || 
+        error.response?.status === 503 || 
+        error.response?.status === 429) {
+      return true;
+    }
+    
+    // Check for network errors
+    if (error.code === 'ECONNRESET' || 
+        error.code === 'ETIMEDOUT' || 
+        error.code === 'ENOTFOUND') {
+      return true;
+    }
+    
+    return false;
+  }
+
+  private async makeRequest<T>(url: string): Promise<T> {
+    let lastError: any;
+    
+    for (let attempt = 0; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        // Enforce rate limiting before making request
+        await this.enforceRateLimit();
+        
+        const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+
+        const response = await axios.get(fullUrl, {
+          timeout: 10000,
+          headers: {
+            'User-Agent': 'BGG-GraphQL-Proxy/1.0.0',
+          },
+        });
+
+        let result: T;
+        if (typeof response.data === "string") {
+          result = await this.parseXML(response.data);
+        } else {
+          result = response.data;
+        }
+
+        return result;
+      } catch (error) {
+        lastError = error;
+        
+        // Check if this is a retryable error
+        if (attempt < this.MAX_RETRIES && this.isRetryableError(error)) {
+          const delay = this.RETRY_DELAYS[attempt] || 4000;
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.log(`BGG API request failed (attempt ${attempt + 1}/${this.MAX_RETRIES + 1}), retrying in ${delay}ms:`, errorMessage);
+          await this.sleep(delay);
+          continue;
+        }
+        
+        // If not retryable or max retries reached, throw the error
+        break;
+      }
+    }
+    
+    // Handle final error
+    console.error("BGG API request failed after all retries:", lastError);
+    
+    // Handle rate limiting errors specifically
+    if (lastError && typeof lastError === 'object' && 'response' in lastError) {
+      const axiosError = lastError as any;
+      if (axiosError.response?.status === 502 || 
+          axiosError.response?.status === 503 || 
+          axiosError.response?.status === 429) {
+        throw new Error(
+          "BGG API is currently rate limiting requests. Please try again in a few seconds."
+        );
+      }
+    }
+    
+    throw new Error(
+      `BGG API request failed after ${this.MAX_RETRIES + 1} attempts: ${lastError instanceof Error ? lastError.message : "Unknown error"
+      }`
+    );
   }
 
   // Thing operations
