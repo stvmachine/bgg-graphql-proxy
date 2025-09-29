@@ -11,9 +11,7 @@
     "generate-types": "tsx scripts/generate-types.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:expansions": "node test-expansions.js",
-    "test:integration": "npm run test:expansions"
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "bgg",
