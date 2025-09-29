@@ -1,22 +1,22 @@
 type Query {
   # Thing queries
-  thing(id: ID!): Thing
-  things(ids: [ID!]!): [Thing!]!
-  search(query: String!, type: ThingType, exact: Boolean): [Thing!]!
+  thing(id: ID!): Thing @cacheControl(maxAge: 3600) # Cache for 1 hour
+  things(ids: [ID!]!): [Thing!]! @cacheControl(maxAge: 3600) # Cache for 1 hour
+  search(query: String!, type: ThingType, exact: Boolean): [Thing!]! @cacheControl(maxAge: 1800) # Cache for 30 minutes
   
   # User queries
-  user(username: String!): User
-  userCollection(username: String!, subtype: CollectionSubtype): Collection
+  user(username: String!): User @cacheControl(maxAge: 3600) # Cache for 1 hour
+  userCollection(username: String!, subtype: CollectionSubtype): Collection @cacheControl(maxAge: 1800) # Cache for 30 minutes
   
   # Play queries
-  userPlays(username: String!, id: ID, mindate: String, maxdate: String, page: Int): PlayResult
+  userPlays(username: String!, id: ID, mindate: String, maxdate: String, page: Int): PlayResult @cacheControl(maxAge: 300) # Cache for 5 minutes
   
   # Geeklist queries
-  geeklist(id: ID!): Geeklist
-  geeklists(username: String, page: Int): [Geeklist!]!
+  geeklist(id: ID!): Geeklist @cacheControl(maxAge: 1800) # Cache for 30 minutes
+  geeklists(username: String, page: Int): [Geeklist!]! @cacheControl(maxAge: 1800) # Cache for 30 minutes
   
-  # Hot items
-  hotItems(type: ThingType): [Thing!]!
+  # Hot items - cache for 1 hour since they change less frequently
+  hotItems(type: ThingType): [Thing!]! @cacheControl(maxAge: 3600)
 }
 
 type Thing {
@@ -427,3 +427,11 @@ scalar JSON
 directive @cache(ttl: Int) on FIELD_DEFINITION
 directive @rateLimit(limit: Int, window: String) on FIELD_DEFINITION
 directive @deprecated(reason: String) on FIELD_DEFINITION | ENUM_VALUE
+
+# Cache control directive for Apollo Server
+directive @cacheControl(maxAge: Int, scope: CacheControlScope) on FIELD_DEFINITION | OBJECT | INTERFACE
+
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}

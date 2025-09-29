@@ -1,4 +1,5 @@
 import { ApolloServer } from '@apollo/server';
+import responseCachePlugin from '@apollo/server-plugin-response-cache';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { KeyvAdapter } from "@apollo/utils.keyvadapter";
 import { expressMiddleware } from '@as-integrations/express4';
@@ -20,20 +21,39 @@ interface ContextValue {
 // Load GraphQL schema
 const typeDefs = readFileSync(join(__dirname, 'src/schema/schema.graphql'), 'utf8');
 
-// Read Upstash Redis URL from environment
-const redisUrl = process.env.UPSTASH_REDIS_URL as string;
+// Read Redis URL from environment, default to local Redis
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
+
+  // Initialize Redis cache with error handling
+  let cache;
+  try {
+    console.log(`🔗 Connecting to Redis at: ${redisUrl}`);
+    cache = new KeyvAdapter(
+      new Keyv(new KeyvRedis(redisUrl))
+    );
+    console.log('✅ Redis cache initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize Redis cache:', error);
+    console.log('⚠️  Falling back to in-memory cache');
+    cache = undefined; // Apollo will use in-memory cache
+  }
+
   const server = new ApolloServer<ContextValue>({
     typeDefs,
     resolvers,
     introspection: true,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-    cache: new KeyvAdapter(
-      new Keyv(new KeyvRedis(redisUrl))
-    ),
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      responseCachePlugin({
+        // Use Redis cache for response caching
+        ...(cache && { cache }),
+      }),
+    ],
+    ...(cache && { cache }),
   });
 
   await server.start();

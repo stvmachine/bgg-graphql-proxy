@@ -90,8 +90,8 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
       }
 
       // Find the base game link
-      const baseGameLink = parent.links?.find(link => 
-        link.linkType === 'BOARDGAME_BASE' || 
+      const baseGameLink = parent.links?.find(link =>
+        link.linkType === 'BOARDGAME_BASE' ||
         (link.type === 'boardgamebase' || link.type === 'boardgame')
       );
 
@@ -114,8 +114,8 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
       }
 
       // Find expansion links
-      const expansionLinks = parent.links?.filter(link => 
-        link.linkType === 'BOARDGAME_EXPANSION' || 
+      const expansionLinks = parent.links?.filter(link =>
+        link.linkType === 'BOARDGAME_EXPANSION' ||
         link.type === 'boardgameexpansion'
       ) || [];
 
@@ -126,7 +126,7 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
       // Limit to first 10 expansions to avoid API limits (BGG has a 20 item limit)
       const limitedExpansionLinks = expansionLinks.slice(0, 10);
       const expansionIds = limitedExpansionLinks.map(link => link.targetId);
-      
+
       try {
         // Fetch expansions in smaller batches to avoid API limits
         const expansions = [];
