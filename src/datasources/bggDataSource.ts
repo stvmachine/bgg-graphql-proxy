@@ -208,19 +208,13 @@ export class BGGDataSource extends RESTDataSource {
     username: string,
     subtype?: string
   ): Promise<Collection | null> {
-    // Handle the BGG API bug where subtype=boardgame returns both boardgames and expansions
-    // but incorrectly labels expansions as subtype=boardgame
-    if (!subtype || subtype === 'boardgame') {
-      return this.getUserCollectionWithExpansionWorkaround(username);
-    }
-
-    // For other subtypes, use the normal approach
-    let url = `/collection?username=${encodeURIComponent(username)}`;
+    // Use the normal approach for all requests
+    let url = `/collection?username=${encodeURIComponent(username)}&stats=1`;
     if (subtype) url += `&subtype=${subtype}`;
 
     const data = await this.makeRequest<any>(url);
 
-    if (data?.items) {
+    if (data) {
       return this.normalizeCollection(data);
     }
 
@@ -232,11 +226,11 @@ export class BGGDataSource extends RESTDataSource {
   ): Promise<Collection | null> {
     try {
       // First call: Get boardgames only (excluding expansions)
-      const boardgamesUrl = `/collection?username=${encodeURIComponent(username)}&excludesubtype=boardgameexpansion`;
+      const boardgamesUrl = `/collection?username=${encodeURIComponent(username)}&excludesubtype=boardgameexpansion&stats=1`;
       const boardgamesData = await this.makeRequest<any>(boardgamesUrl);
 
       // Second call: Get expansions only
-      const expansionsUrl = `/collection?username=${encodeURIComponent(username)}&subtype=boardgameexpansion`;
+      const expansionsUrl = `/collection?username=${encodeURIComponent(username)}&subtype=boardgameexpansion&stats=1`;
       const expansionsData = await this.makeRequest<any>(expansionsUrl);
 
       // Combine the results
@@ -264,7 +258,7 @@ export class BGGDataSource extends RESTDataSource {
     username: string
   ): Promise<Collection | null> {
     // Fallback to original method if workaround fails
-    const url = `/collection?username=${encodeURIComponent(username)}`;
+    const url = `/collection?username=${encodeURIComponent(username)}&stats=1`;
     const data = await this.makeRequest<any>(url);
 
     if (data?.items) {
@@ -422,10 +416,68 @@ export class BGGDataSource extends RESTDataSource {
   }
 
   private normalizeCollection(data: any): Collection {
+    console.log("=== Collection data structure ===");
+    console.log("Full data keys:", Object.keys(data));
+    console.log("Total items:", data.totalitems);
+    console.log("Pub date:", data.pubdate);
+    console.log("Item type:", typeof data.item);
+    console.log("Item is array:", Array.isArray(data.item));
+    
+    // Handle the BGG API XML structure
+    // The XML parser returns the structure as: { item: [...] } (flattened)
+    let items = [];
+    if (data.item) {
+      if (Array.isArray(data.item)) {
+        items = data.item;
+        console.log("Found array of items:", items.length);
+      } else {
+        items = [data.item];
+        console.log("Found single item, wrapped in array");
+      }
+    } else {
+      console.log("No data.item found");
+    }
+    
+    console.log("Final items count:", items.length);
+    
     return {
       totalItems: this.parseNumber(data.totalitems) || 0,
       pubDate: data.pubdate || "",
-      items: data.items || [],
+      items: items.map((item: any) => this.normalizeCollectionItem(item)),
+    };
+  }
+
+  private normalizeCollectionItem(item: any): any {
+    return {
+      __typename: "CollectionItem",
+      objectType: item.objecttype || "",
+      objectId: item.objectid || "",
+      subtype: item.subtype || "",
+      collId: item.collid || "",
+      name: this.getPrimaryName(item.name),
+      yearPublished: this.parseNumber(item.yearpublished) || 0,
+      image: item.image || "",
+      thumbnail: item.thumbnail || "",
+      status: {
+        __typename: "Status",
+        own: item.status?.own || "0",
+        prevOwned: item.status?.prevowned || "0",
+        forTrade: item.status?.fortrade || "0",
+        want: item.status?.want || "0",
+        wantToPlay: item.status?.wanttoplay || "0",
+        wantToBuy: item.status?.wanttobuy || "0",
+        wishlist: item.status?.wishlist || "0",
+        preordered: item.status?.preordered || "0",
+        lastModified: item.status?.lastmodified || "",
+      },
+      numPlays: this.parseNumber(item.numplays) || 0,
+      comment: item.comment || "",
+      conditionText: item.conditiontext || "",
+      condition: item.condition || "",
+      wantPartsList: item.wantpartslist || "",
+      hasPartsList: item.haspartslist || "",
+      preordered: item.preordered || "",
+      lastModified: item.lastmodified || "",
     };
   }
 
@@ -522,7 +574,8 @@ export class BGGDataSource extends RESTDataSource {
       const primary = name.find((n) => n.type === "primary");
       return primary?.value || name[0]?.value || "";
     }
-    return name.value || "";
+    // Handle XML parser output where name is an object with _ property
+    return name._ || name.value || "";
   }
 
   private getAlternateNames(name: any): string[] {
