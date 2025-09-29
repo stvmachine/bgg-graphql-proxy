@@ -48,6 +48,11 @@ export type BoardgameRank = {
   type: Scalars['String']['output'];
 };
 
+export enum CacheControlScope {
+  Private = 'PRIVATE',
+  Public = 'PUBLIC'
+}
+
 export type Category = {
   __typename?: 'Category';
   id: Scalars['String']['output'];
@@ -597,6 +602,7 @@ export type ResolversTypes = ResolversObject<{
   BGGEntity: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['BGGEntity']>;
   BoardgameRank: ResolverTypeWrapper<BoardgameRank>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  CacheControlScope: CacheControlScope;
   Category: ResolverTypeWrapper<Category>;
   Collection: ResolverTypeWrapper<Collection>;
   CollectionFiltersInput: CollectionFiltersInput;
@@ -704,6 +710,13 @@ export type CacheDirectiveArgs = {
 };
 
 export type CacheDirectiveResolver<Result, Parent, ContextType = ApolloContext, Args = CacheDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
+export type CacheControlDirectiveArgs = {
+  maxAge?: Maybe<Scalars['Int']['input']>;
+  scope?: Maybe<CacheControlScope>;
+};
+
+export type CacheControlDirectiveResolver<Result, Parent, ContextType = ApolloContext, Args = CacheControlDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type RateLimitDirectiveArgs = {
   limit?: Maybe<Scalars['Int']['input']>;
@@ -1165,5 +1178,6 @@ export type Resolvers<ContextType = ApolloContext> = ResolversObject<{
 
 export type DirectiveResolvers<ContextType = ApolloContext> = ResolversObject<{
   cache?: CacheDirectiveResolver<any, any, ContextType>;
+  cacheControl?: CacheControlDirectiveResolver<any, any, ContextType>;
   rateLimit?: RateLimitDirectiveResolver<any, any, ContextType>;
 }>;
