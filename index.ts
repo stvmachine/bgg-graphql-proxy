@@ -30,6 +30,7 @@ const app = express();
 
 // Initialize Redis cache with error handling
 let cache;
+const cacheControl = { defaultMaxAge: 3600 };
 try {
   console.log(`🔗 Connecting to Redis at: ${redisUrl}`);
   cache = new KeyvAdapter(new Keyv<string>(new KeyvRedis(redisUrl)));
@@ -50,7 +51,7 @@ const server = new ApolloServer<ContextValue>({
       ...(cache && { cache }),
     }),
   ],
-  ...(cache && { cache }),
+  ...(cache && { cache, cacheControl }),
 });
 
 // Initialize Apollo Server and set up routes

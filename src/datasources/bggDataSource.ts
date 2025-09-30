@@ -264,7 +264,8 @@ export class BGGDataSource extends RESTDataSource {
       // Create combined collection data
       const combinedData = {
         totalitems:
-          (boardgamesData?.totalitems || 0) + (expansionsData?.totalitems || 0),
+          this.parseNumber(boardgamesData?.totalitems || 0) +
+          this.parseNumber(expansionsData?.totalitems || 0),
         pubdate: boardgamesData?.pubdate || expansionsData?.pubdate || "",
         item: allItems,
       };
@@ -572,16 +573,16 @@ export class BGGDataSource extends RESTDataSource {
   }
 
   // Helper functions for data parsing
-  private parseNumber(value: any): number | undefined {
-    if (!value) return undefined;
+  private parseNumber(value: any): number {
+    if (!value) return 0;
     const parsed = parseInt(value, 10);
-    return isNaN(parsed) ? undefined : parsed;
+    return isNaN(parsed) ? 0 : parsed;
   }
 
-  private parseFloat(value: any): number | undefined {
-    if (!value) return undefined;
+  private parseFloat(value: any): number {
+    if (!value) return 0;
     const parsed = parseFloat(value);
-    return isNaN(parsed) ? undefined : parsed;
+    return isNaN(parsed) ? 0 : parsed;
   }
 
   private getPrimaryName(name: any): string {
