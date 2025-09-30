@@ -1,4 +1,7 @@
 import { BGGDataSource } from "../datasources/bggDataSource";
+import * as fs from "fs";
+import * as path from "path";
+import * as xml2js from "xml2js";
 
 describe("BGGDataSource - Collection Tests", () => {
   let bggDataSource: BGGDataSource;
@@ -10,37 +13,21 @@ describe("BGGDataSource - Collection Tests", () => {
 
   describe("getUserCollection", () => {
     it("should parse stevmachine collection correctly", async () => {
-      // Mock the makeRequest method to return our fixture data
-      const mockData = {
-        totalitems: "302",
-        pubdate: "Mon, 29 Sep 2025 23:09:34 +0000",
-        item: [
-          {
-            objecttype: "thing",
-            objectid: "68448",
-            subtype: "boardgame",
-            collid: "81513277",
-            name: { _: "7 Wonders", sortindex: "1" },
-            yearpublished: "2010",
-            image:
-              "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__original/img/jt70jJDZ1y1FWJs4ZQf5FI8APVY=/0x0/filters:format(jpeg)/pic7149798.jpg",
-            thumbnail:
-              "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__small/img/BUOso8b0M1aUOkU80FWlhE8uuxc=/fit-in/200x150/filters:strip_icc()/pic7149798.jpg",
-            status: {
-              own: "0",
-              prevowned: "1",
-              fortrade: "0",
-              want: "0",
-              wanttoplay: "0",
-              wanttobuy: "0",
-              wishlist: "0",
-              preordered: "0",
-              lastmodified: "2021-06-19 02:39:56",
-            },
-            numplays: "6",
-          },
-        ],
-      };
+      // Load the real fixture data with own=1 filter
+      const fixturePath = path.join(
+        __dirname,
+        "./fixtures/stevmachine_collection.xml"
+      );
+      const fixtureXml = fs.readFileSync(fixturePath, "utf8");
+
+      // Parse XML using the same parser as BGGDataSource
+      const xmlParser = new xml2js.Parser({
+        explicitArray: false,
+        mergeAttrs: true,
+        explicitRoot: false,
+      });
+
+      const mockData = await xmlParser.parseStringPromise(fixtureXml);
 
       // Mock the makeRequest method
       jest
@@ -50,17 +37,16 @@ describe("BGGDataSource - Collection Tests", () => {
       const result = await bggDataSource.getUserCollection("stevmachine");
 
       expect(result).not.toBeNull();
-      expect(result?.totalItems).toBe(302);
-      expect(result?.pubDate).toBe("Mon, 29 Sep 2025 23:09:34 +0000");
-      expect(result?.items).toHaveLength(1);
+      expect(result?.totalItems).toBe(75);
+      expect(result?.pubDate).toBe("Tue, 30 Sep 2025 00:45:57 +0000");
+      expect(result?.items).toHaveLength(75);
 
       const firstItem = result?.items[0];
-      expect(firstItem?.objectId).toBe("68448");
-      expect(firstItem?.name).toBe("7 Wonders");
-      expect(firstItem?.yearPublished).toBe(2010);
-      expect(firstItem?.numPlays).toBe(6);
-      expect(firstItem?.status.own).toBe("0");
-      expect(firstItem?.status.prevOwned).toBe("1");
+      expect(firstItem?.objectId).toBe("316377");
+      expect(firstItem?.name).toBe("7 Wonders (Second Edition)");
+      expect(firstItem?.yearPublished).toBe(2020);
+      expect(firstItem?.numPlays).toBe(0);
+      expect(firstItem?.status.own).toBe("1");
     });
 
     it("should handle empty collection", async () => {

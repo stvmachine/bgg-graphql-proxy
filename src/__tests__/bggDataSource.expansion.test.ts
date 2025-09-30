@@ -9,7 +9,7 @@ describe("BGGDataSource - Expansion Workaround Simple Test", () => {
   let expansionsData: any;
 
   beforeAll(async () => {
-    // Load the fixture XML content
+    // Load the updated fixture XML content with own=1 filter
     const boardgamesPath = path.join(
       __dirname,
       "./fixtures/stevmachine_boardgames.xml"
@@ -62,10 +62,10 @@ describe("BGGDataSource - Expansion Workaround Simple Test", () => {
         item: allItems,
       };
 
-      expect(combinedData.totalitems).toBe(302); // 281 + 21
-      expect(allItems).toHaveLength(302);
-      expect(boardgameItems).toHaveLength(281);
-      expect(expansionItems).toHaveLength(21);
+      expect(combinedData.totalitems).toBe(75); // 62 boardgames + 13 expansions
+      expect(allItems).toHaveLength(75);
+      expect(boardgameItems).toHaveLength(62);
+      expect(expansionItems).toHaveLength(13);
     });
 
     it("should have correct item structure", () => {
@@ -84,14 +84,14 @@ describe("BGGDataSource - Expansion Workaround Simple Test", () => {
       const firstBoardgame = boardgameItems[0];
       expect(firstBoardgame.objecttype).toBe("thing");
       expect(firstBoardgame.subtype).toBe("boardgame");
-      expect(firstBoardgame.name._).toBe("7 Wonders");
+      expect(firstBoardgame.name._).toBe("7 Wonders (Second Edition)");
       expect(firstBoardgame.status).toBeDefined();
 
       // Check first expansion
       const firstExpansion = expansionItems[0];
       expect(firstExpansion.objecttype).toBe("thing");
       expect(firstExpansion.subtype).toBe("boardgameexpansion");
-      expect(firstExpansion.name._).toBe("Camel Up: Supercup");
+      expect(firstExpansion.name._).toBe("Coup: Reformation");
       expect(firstExpansion.status).toBeDefined();
     });
 
@@ -122,9 +122,9 @@ describe("BGGDataSource - Expansion Workaround Simple Test", () => {
       const result = (dataSource as any).normalizeCollection(combinedData);
 
       expect(result).toBeDefined();
-      expect(result.totalItems).toBe(302);
-      expect(result.items).toHaveLength(302);
-      expect(result.pubDate).toBe("Mon, 29 Sep 2025 23:10:29 +0000");
+      expect(result.totalItems).toBe(75);
+      expect(result.items).toHaveLength(75);
+      expect(result.pubDate).toBe("Tue, 30 Sep 2025 00:46:01 +0000");
 
       // Check that all items have the correct structure
       result.items.forEach((item: any) => {
@@ -143,8 +143,8 @@ describe("BGGDataSource - Expansion Workaround Simple Test", () => {
         (item: any) => item.subtype === "boardgameexpansion"
       );
 
-      expect(boardgames).toHaveLength(281);
-      expect(expansions).toHaveLength(21);
+      expect(boardgames).toHaveLength(62);
+      expect(expansions).toHaveLength(13);
     });
   });
 });

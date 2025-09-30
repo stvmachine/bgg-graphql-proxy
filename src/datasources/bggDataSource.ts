@@ -93,7 +93,9 @@ export class BGGDataSource extends RESTDataSource {
 
         try {
           // Use full URL to avoid RESTDataSource URL construction issues
-          const fullUrl = url.startsWith("http") ? url : `${this.baseURL}${url}`;
+          const fullUrl = url.startsWith("http")
+            ? url
+            : `${this.baseURL}${url}`;
           const response = await this.get(fullUrl, {
             headers: {
               "User-Agent": "BGG-GraphQL-Proxy/1.0.0",
@@ -232,7 +234,7 @@ export class BGGDataSource extends RESTDataSource {
     }
 
     // Use the normal approach for other requests
-    let url = `/collection?username=${encodeURIComponent(username)}&stats=1`;
+    let url = `/collection?username=${encodeURIComponent(username)}&stats=1&own=1`;
     if (subtype) url += `&subtype=${subtype}`;
 
     const data = await this.makeRequest<any>(url);
@@ -249,11 +251,11 @@ export class BGGDataSource extends RESTDataSource {
   ): Promise<Collection | null> {
     try {
       // First call: Get boardgames only (excluding expansions)
-      const boardgamesUrl = `/collection?username=${encodeURIComponent(username)}&excludesubtype=boardgameexpansion&stats=1`;
+      const boardgamesUrl = `/collection?username=${encodeURIComponent(username)}&excludesubtype=boardgameexpansion&stats=1&own=1`;
       const boardgamesData = await this.makeRequest<any>(boardgamesUrl);
 
       // Second call: Get expansions only
-      const expansionsUrl = `/collection?username=${encodeURIComponent(username)}&subtype=boardgameexpansion&stats=1`;
+      const expansionsUrl = `/collection?username=${encodeURIComponent(username)}&subtype=boardgameexpansion&stats=1&own=1`;
       const expansionsData = await this.makeRequest<any>(expansionsUrl);
 
       // Combine the results - handle both array and single item cases
@@ -294,7 +296,7 @@ export class BGGDataSource extends RESTDataSource {
   private async getUserCollectionFallback(
     username: string
   ): Promise<Collection | null> {
-    const url = `/collection?username=${encodeURIComponent(username)}&stats=1`;
+    const url = `/collection?username=${encodeURIComponent(username)}&stats=1&own=1`;
     const data = await this.makeRequest<any>(url);
 
     if (data) {

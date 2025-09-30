@@ -26,7 +26,7 @@ describe("XML Parsing Tests", () => {
     it("should parse XML content correctly", async () => {
       expect(xmlContent.length).toBeGreaterThan(0);
       expect(xmlContent).toContain('<?xml version="1.0"');
-      expect(xmlContent).toContain('<items totalitems="302"');
+      expect(xmlContent).toContain('<items totalitems="75"');
     });
 
     it("should parse XML structure correctly", async () => {
@@ -42,8 +42,8 @@ describe("XML Parsing Tests", () => {
       ]);
 
       // Check metadata
-      expect(result.totalitems).toBe("302");
-      expect(result.pubdate).toBe("Mon, 29 Sep 2025 23:09:34 +0000");
+      expect(result.totalitems).toBe("75");
+      expect(result.pubdate).toBe("Tue, 30 Sep 2025 00:45:57 +0000");
       expect(result.termsofuse).toBe(
         "https://boardgamegeek.com/xmlapi/termsofuse"
       );
@@ -55,7 +55,7 @@ describe("XML Parsing Tests", () => {
       // Check items structure
       expect(result.item).toBeDefined();
       expect(Array.isArray(result.item)).toBe(true);
-      expect(result.item.length).toBe(302);
+      expect(result.item.length).toBe(75);
     });
 
     it("should parse first item correctly", async () => {
@@ -80,11 +80,11 @@ describe("XML Parsing Tests", () => {
 
       // Check item properties
       expect(firstItem.objecttype).toBe("thing");
-      expect(firstItem.objectid).toBe("68448");
+      expect(firstItem.objectid).toBe("316377");
       expect(firstItem.subtype).toBe("boardgame");
-      expect(firstItem.collid).toBe("81513277");
-      expect(firstItem.yearpublished).toBe("2010");
-      expect(firstItem.numplays).toBe("6");
+      expect(firstItem.collid).toBe("83135926");
+      expect(firstItem.yearpublished).toBe("2020");
+      expect(firstItem.numplays).toBe("0");
     });
 
     it("should parse name field correctly", async () => {
@@ -94,7 +94,7 @@ describe("XML Parsing Tests", () => {
       // Check name structure (XML parser converts to object with _ property)
       expect(firstItem.name).toBeDefined();
       expect(typeof firstItem.name).toBe("object");
-      expect(firstItem.name._).toBe("7 Wonders");
+      expect(firstItem.name._).toBe("7 Wonders (Second Edition)");
       expect(firstItem.name.sortindex).toBe("1");
     });
 
@@ -105,15 +105,15 @@ describe("XML Parsing Tests", () => {
       // Check status structure
       expect(firstItem.status).toBeDefined();
       expect(typeof firstItem.status).toBe("object");
-      expect(firstItem.status.own).toBe("0");
-      expect(firstItem.status.prevowned).toBe("1");
+      expect(firstItem.status.own).toBe("1");
+      expect(firstItem.status.prevowned).toBe("0");
       expect(firstItem.status.fortrade).toBe("0");
       expect(firstItem.status.want).toBe("0");
       expect(firstItem.status.wanttoplay).toBe("0");
       expect(firstItem.status.wanttobuy).toBe("0");
       expect(firstItem.status.wishlist).toBe("0");
       expect(firstItem.status.preordered).toBe("0");
-      expect(firstItem.status.lastmodified).toBe("2021-06-19 02:39:56");
+      expect(firstItem.status.lastmodified).toBe("2023-11-05 17:33:09");
     });
 
     it("should parse image URLs correctly", async () => {
@@ -134,12 +134,12 @@ describe("XML Parsing Tests", () => {
       // Check stats structure
       expect(firstItem.stats).toBeDefined();
       expect(typeof firstItem.stats).toBe("object");
-      expect(firstItem.stats.minplayers).toBe("2");
+      expect(firstItem.stats.minplayers).toBe("3");
       expect(firstItem.stats.maxplayers).toBe("7");
       expect(firstItem.stats.minplaytime).toBe("30");
       expect(firstItem.stats.maxplaytime).toBe("30");
       expect(firstItem.stats.playingtime).toBe("30");
-      expect(firstItem.stats.numowned).toBe("151233");
+      expect(firstItem.stats.numowned).toBe("17570");
     });
 
     it("should have consistent item structure across all items", async () => {
