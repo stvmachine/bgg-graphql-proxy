@@ -3,6 +3,7 @@ import axios from "axios";
 import * as xml2js from "xml2js";
 import {
   Collection,
+  CollectionSubtype,
   Geeklist,
   Play,
   Thing,
@@ -213,8 +214,11 @@ export class BGGDataSource extends RESTDataSource {
     username: string,
     subtype?: string
   ): Promise<Collection | null> {
+    // Normalize subtype to uppercase for consistent handling
+    const normalizedSubtype = subtype?.toUpperCase();
+
     // Use expansion workaround for boardgame subtype to include expansions
-    if (subtype === "boardgame") {
+    if (normalizedSubtype === CollectionSubtype.Boardgame) {
       return this.getUserCollectionWithExpansionWorkaround(username);
     }
 

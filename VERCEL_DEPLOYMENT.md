@@ -5,6 +5,7 @@ This guide will help you deploy your BGG GraphQL Proxy to Vercel.
 ## Prerequisites
 
 1. **Install Vercel CLI**:
+
    ```bash
    npm install -g vercel
    ```
@@ -17,16 +18,19 @@ This guide will help you deploy your BGG GraphQL Proxy to Vercel.
 ## Deployment Steps
 
 ### 1. Login to Vercel
+
 ```bash
 vercel login
 ```
 
 ### 2. Deploy to Vercel
+
 ```bash
 vercel --prod
 ```
 
 ### 3. Set Environment Variables
+
 In your Vercel dashboard, set the following environment variables:
 
 - `REDIS_URL` (optional): Your Redis connection string for caching
