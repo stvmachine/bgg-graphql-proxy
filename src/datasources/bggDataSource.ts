@@ -1,5 +1,4 @@
 import { RESTDataSource } from "@apollo/datasource-rest";
-import axios from "axios";
 import * as xml2js from "xml2js";
 import {
   Collection,
@@ -88,23 +87,36 @@ export class BGGDataSource extends RESTDataSource {
         // Enforce rate limiting before making request
         await this.enforceRateLimit();
 
-        const fullUrl = url.startsWith("http") ? url : `${this.baseURL}${url}`;
+        // Use RESTDataSource's get method for proper caching with timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const response = await axios.get(fullUrl, {
-          timeout: 10000,
-          headers: {
-            "User-Agent": "BGG-GraphQL-Proxy/1.0.0",
-          },
-        });
+        try {
+          // Use full URL to avoid RESTDataSource URL construction issues
+          const fullUrl = url.startsWith("http") ? url : `${this.baseURL}${url}`;
+          const response = await this.get(fullUrl, {
+            headers: {
+              "User-Agent": "BGG-GraphQL-Proxy/1.0.0",
+            },
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
 
-        let result: T;
-        if (typeof response.data === "string") {
-          result = await this.parseXML(response.data);
-        } else {
-          result = response.data;
+          let result: T;
+          if (typeof response === "string") {
+            result = await this.parseXML(response);
+          } else {
+            result = response as T;
+          }
+
+          return result;
+        } catch (error) {
+          clearTimeout(timeout);
+          if (error instanceof Error && error.name === "AbortError") {
+            throw new Error("Request timed out after 10 seconds");
+          }
+          throw error;
         }
-
-        return result;
       } catch (error) {
         lastError = error;
 
@@ -131,11 +143,11 @@ export class BGGDataSource extends RESTDataSource {
 
     // Handle rate limiting errors specifically
     if (lastError && typeof lastError === "object" && "response" in lastError) {
-      const axiosError = lastError as any;
+      const httpError = lastError as any;
       if (
-        axiosError.response?.status === 502 ||
-        axiosError.response?.status === 503 ||
-        axiosError.response?.status === 429
+        httpError.response?.status === 502 ||
+        httpError.response?.status === 503 ||
+        httpError.response?.status === 429
       ) {
         throw new Error(
           "BGG API is currently rate limiting requests. Please try again in a few seconds."
@@ -144,7 +156,8 @@ export class BGGDataSource extends RESTDataSource {
     }
 
     throw new Error(
-      `BGG API request failed after ${this.MAX_RETRIES + 1} attempts: ${lastError instanceof Error ? lastError.message : "Unknown error"
+      `BGG API request failed after ${this.MAX_RETRIES + 1} attempts: ${
+        lastError instanceof Error ? lastError.message : "Unknown error"
       }`
     );
   }
@@ -433,9 +446,9 @@ export class BGGDataSource extends RESTDataSource {
       address:
         user.stateorprovince || user.country
           ? {
-            city: user.stateorprovince?.value || "",
-            isoCountry: user.country?.value || "",
-          }
+              city: user.stateorprovince?.value || "",
+              isoCountry: user.country?.value || "",
+            }
           : undefined,
       guilds: [],
       microbadges: [],
