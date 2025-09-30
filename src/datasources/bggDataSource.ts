@@ -1,6 +1,6 @@
-import { RESTDataSource } from '@apollo/datasource-rest';
-import * as xml2js from "xml2js";
+import { RESTDataSource } from "@apollo/datasource-rest";
 import axios from "axios";
+import * as xml2js from "xml2js";
 import {
   Collection,
   Geeklist,
@@ -41,13 +41,13 @@ export class BGGDataSource extends RESTDataSource {
   private async enforceRateLimit(): Promise<void> {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
-    
+
     if (timeSinceLastRequest < this.RATE_LIMIT_DELAY) {
       const waitTime = this.RATE_LIMIT_DELAY - timeSinceLastRequest;
       console.log(`Rate limiting: waiting ${waitTime}ms before next request`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
-    
+
     this.lastRequestTime = Date.now();
   }
 
@@ -56,39 +56,43 @@ export class BGGDataSource extends RESTDataSource {
   }
 
   private isRetryableError(error: any): boolean {
-    if (!error || typeof error !== 'object') return false;
-    
+    if (!error || typeof error !== "object") return false;
+
     // Check for rate limiting errors (502, 503, 429)
-    if (error.response?.status === 502 || 
-        error.response?.status === 503 || 
-        error.response?.status === 429) {
+    if (
+      error.response?.status === 502 ||
+      error.response?.status === 503 ||
+      error.response?.status === 429
+    ) {
       return true;
     }
-    
+
     // Check for network errors
-    if (error.code === 'ECONNRESET' || 
-        error.code === 'ETIMEDOUT' || 
-        error.code === 'ENOTFOUND') {
+    if (
+      error.code === "ECONNRESET" ||
+      error.code === "ETIMEDOUT" ||
+      error.code === "ENOTFOUND"
+    ) {
       return true;
     }
-    
+
     return false;
   }
 
   private async makeRequest<T>(url: string): Promise<T> {
     let lastError: any;
-    
+
     for (let attempt = 0; attempt <= this.MAX_RETRIES; attempt++) {
       try {
         // Enforce rate limiting before making request
         await this.enforceRateLimit();
-        
-        const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+
+        const fullUrl = url.startsWith("http") ? url : `${this.baseURL}${url}`;
 
         const response = await axios.get(fullUrl, {
           timeout: 10000,
           headers: {
-            'User-Agent': 'BGG-GraphQL-Proxy/1.0.0',
+            "User-Agent": "BGG-GraphQL-Proxy/1.0.0",
           },
         });
 
@@ -102,47 +106,52 @@ export class BGGDataSource extends RESTDataSource {
         return result;
       } catch (error) {
         lastError = error;
-        
+
         // Check if this is a retryable error
         if (attempt < this.MAX_RETRIES && this.isRetryableError(error)) {
           const delay = this.RETRY_DELAYS[attempt] || 4000;
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.log(`BGG API request failed (attempt ${attempt + 1}/${this.MAX_RETRIES + 1}), retrying in ${delay}ms:`, errorMessage);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          console.log(
+            `BGG API request failed (attempt ${attempt + 1}/${this.MAX_RETRIES + 1}), retrying in ${delay}ms:`,
+            errorMessage
+          );
           await this.sleep(delay);
           continue;
         }
-        
+
         // If not retryable or max retries reached, throw the error
         break;
       }
     }
-    
+
     // Handle final error
     console.error("BGG API request failed after all retries:", lastError);
-    
+
     // Handle rate limiting errors specifically
-    if (lastError && typeof lastError === 'object' && 'response' in lastError) {
+    if (lastError && typeof lastError === "object" && "response" in lastError) {
       const axiosError = lastError as any;
-      if (axiosError.response?.status === 502 || 
-          axiosError.response?.status === 503 || 
-          axiosError.response?.status === 429) {
+      if (
+        axiosError.response?.status === 502 ||
+        axiosError.response?.status === 503 ||
+        axiosError.response?.status === 429
+      ) {
         throw new Error(
           "BGG API is currently rate limiting requests. Please try again in a few seconds."
         );
       }
     }
-    
+
     throw new Error(
-      `BGG API request failed after ${this.MAX_RETRIES + 1} attempts: ${lastError instanceof Error ? lastError.message : "Unknown error"
+      `BGG API request failed after ${this.MAX_RETRIES + 1} attempts: ${
+        lastError instanceof Error ? lastError.message : "Unknown error"
       }`
     );
   }
 
   // Thing operations
   async getThing(id: string): Promise<Thing | null> {
-    const data = await this.makeRequest<any>(
-      `/thing?id=${id}&stats=1`
-    );
+    const data = await this.makeRequest<any>(`/thing?id=${id}&stats=1`);
 
     // BGG API returns items directly as 'item', not nested under 'items'
     if (data?.item) {
@@ -159,9 +168,7 @@ export class BGGDataSource extends RESTDataSource {
 
     // BGG API returns items directly as 'item' array, not nested under 'items'
     if (data?.item) {
-      const items = Array.isArray(data.item)
-        ? data.item
-        : [data.item];
+      const items = Array.isArray(data.item) ? data.item : [data.item];
       return items.map((item: any) => this.normalizeThing(item));
     }
 
@@ -181,9 +188,7 @@ export class BGGDataSource extends RESTDataSource {
 
     // BGG API returns items directly as 'item' array, not nested under 'items'
     if (data?.item) {
-      const items = Array.isArray(data.item)
-        ? data.item
-        : [data.item];
+      const items = Array.isArray(data.item) ? data.item : [data.item];
       return items.map((item: any) => this.normalizeThing(item));
     }
 
@@ -208,7 +213,12 @@ export class BGGDataSource extends RESTDataSource {
     username: string,
     subtype?: string
   ): Promise<Collection | null> {
-    // Use the normal approach for all requests
+    // Use expansion workaround for boardgame subtype to include expansions
+    if (subtype === "boardgame") {
+      return this.getUserCollectionWithExpansionWorkaround(username);
+    }
+
+    // Use the normal approach for other requests
     let url = `/collection?username=${encodeURIComponent(username)}&stats=1`;
     if (subtype) url += `&subtype=${subtype}`;
 
@@ -233,22 +243,34 @@ export class BGGDataSource extends RESTDataSource {
       const expansionsUrl = `/collection?username=${encodeURIComponent(username)}&subtype=boardgameexpansion&stats=1`;
       const expansionsData = await this.makeRequest<any>(expansionsUrl);
 
-      // Combine the results
-      const allItems = [
-        ...(boardgamesData?.items || []),
-        ...(expansionsData?.items || [])
-      ];
+      // Combine the results - handle both array and single item cases
+      const boardgameItems = boardgamesData?.item
+        ? Array.isArray(boardgamesData.item)
+          ? boardgamesData.item
+          : [boardgamesData.item]
+        : [];
+      const expansionItems = expansionsData?.item
+        ? Array.isArray(expansionsData.item)
+          ? expansionsData.item
+          : [expansionsData.item]
+        : [];
+
+      const allItems = [...boardgameItems, ...expansionItems];
 
       // Create combined collection data
       const combinedData = {
-        totalitems: (boardgamesData?.totalitems || 0) + (expansionsData?.totalitems || 0),
+        totalitems:
+          (boardgamesData?.totalitems || 0) + (expansionsData?.totalitems || 0),
         pubdate: boardgamesData?.pubdate || expansionsData?.pubdate || "",
-        items: allItems
+        item: allItems,
       };
 
       return this.normalizeCollection(combinedData);
     } catch (error) {
-      console.error("Error fetching collection with expansion workaround:", error);
+      console.error(
+        "Error fetching collection with expansion workaround:",
+        error
+      );
       // Fallback to original method if workaround fails
       return this.getUserCollectionFallback(username);
     }
@@ -261,7 +283,7 @@ export class BGGDataSource extends RESTDataSource {
     const url = `/collection?username=${encodeURIComponent(username)}&stats=1`;
     const data = await this.makeRequest<any>(url);
 
-    if (data?.items) {
+    if (data) {
       return this.normalizeCollection(data);
     }
 
@@ -297,9 +319,7 @@ export class BGGDataSource extends RESTDataSource {
 
   // Geeklist operations
   async getGeeklist(id: string): Promise<Geeklist | null> {
-    const data = await this.makeRequest<any>(
-      `/geeklist/${id}`
-    );
+    const data = await this.makeRequest<any>(`/geeklist/${id}`);
 
     if (data?.geeklist) {
       return this.normalizeGeeklist(data.geeklist);
@@ -332,9 +352,7 @@ export class BGGDataSource extends RESTDataSource {
 
     // BGG API returns items directly as 'item' array, not nested under 'items'
     if (data?.item) {
-      const items = Array.isArray(data.item)
-        ? data.item
-        : [data.item];
+      const items = Array.isArray(data.item) ? data.item : [data.item];
       return items.map((item: any) => this.normalizeThing(item));
     }
 
@@ -344,20 +362,28 @@ export class BGGDataSource extends RESTDataSource {
   // Normalization methods - simplified
   private normalizeThing(item: any): Thing {
     const links = this.normalizeLinks(item.link || []);
-    const isExpansion = item.type === 'boardgameexpansion';
-    
+    const isExpansion = item.type === "boardgameexpansion";
+
     return {
       __typename: "Thing",
       id: item.id || "",
       name: this.getPrimaryName(item.name),
       alternateNames: this.getAlternateNames(item.name),
       type: this.mapThingType(item.type) as ThingType,
-      yearPublished: this.parseNumber(item.yearpublished?.value || item.yearpublished),
+      yearPublished: this.parseNumber(
+        item.yearpublished?.value || item.yearpublished
+      ),
       minPlayers: this.parseNumber(item.minplayers?.value || item.minplayers),
       maxPlayers: this.parseNumber(item.maxplayers?.value || item.maxplayers),
-      playingTime: this.parseNumber(item.playingtime?.value || item.playingtime),
-      minPlayTime: this.parseNumber(item.minplaytime?.value || item.minplaytime),
-      maxPlayTime: this.parseNumber(item.maxplaytime?.value || item.maxplaytime),
+      playingTime: this.parseNumber(
+        item.playingtime?.value || item.playingtime
+      ),
+      minPlayTime: this.parseNumber(
+        item.minplaytime?.value || item.minplaytime
+      ),
+      maxPlayTime: this.parseNumber(
+        item.maxplaytime?.value || item.maxplaytime
+      ),
       minAge: this.parseNumber(item.minage?.value || item.minage),
       description: item.description?.value || item.description,
       image: item.image?.value || item.image,
@@ -403,12 +429,13 @@ export class BGGDataSource extends RESTDataSource {
       supportYears: this.parseNumber(user.supportyears?.value) || 0,
       designerId: user.designerid?.value,
       publisherId: user.publisherid?.value,
-      address: user.stateorprovince || user.country
-        ? {
-          city: user.stateorprovince?.value || "",
-          isoCountry: user.country?.value || "",
-        }
-        : undefined,
+      address:
+        user.stateorprovince || user.country
+          ? {
+              city: user.stateorprovince?.value || "",
+              isoCountry: user.country?.value || "",
+            }
+          : undefined,
       guilds: [],
       microbadges: [],
       top: [],
@@ -416,30 +443,17 @@ export class BGGDataSource extends RESTDataSource {
   }
 
   private normalizeCollection(data: any): Collection {
-    console.log("=== Collection data structure ===");
-    console.log("Full data keys:", Object.keys(data));
-    console.log("Total items:", data.totalitems);
-    console.log("Pub date:", data.pubdate);
-    console.log("Item type:", typeof data.item);
-    console.log("Item is array:", Array.isArray(data.item));
-    
     // Handle the BGG API XML structure
     // The XML parser returns the structure as: { item: [...] } (flattened)
     let items = [];
     if (data.item) {
       if (Array.isArray(data.item)) {
         items = data.item;
-        console.log("Found array of items:", items.length);
       } else {
         items = [data.item];
-        console.log("Found single item, wrapped in array");
       }
-    } else {
-      console.log("No data.item found");
     }
-    
-    console.log("Final items count:", items.length);
-    
+
     return {
       totalItems: this.parseNumber(data.totalitems) || 0,
       pubDate: data.pubdate || "",
@@ -493,27 +507,27 @@ export class BGGDataSource extends RESTDataSource {
       linkType: this.mapLinkType(link.type),
       targetId: link.id || "",
       targetName: link.value || "",
-      isExpansionLink: link.type === 'boardgameexpansion'
+      isExpansionLink: link.type === "boardgameexpansion",
     }));
   }
 
   private mapLinkType(linkType: string): string {
     const linkTypeMap: { [key: string]: string } = {
-      'boardgameexpansion': 'BOARDGAME_EXPANSION',
-      'boardgamebase': 'BOARDGAME_BASE',
-      'boardgameaccessory': 'BOARDGAME_ACCESSORY',
-      'boardgamecategory': 'BOARDGAME_CATEGORY',
-      'boardgamemechanic': 'BOARDGAME_MECHANIC',
-      'boardgamedesigner': 'BOARDGAME_DESIGNER',
-      'boardgameartist': 'BOARDGAME_ARTIST',
-      'boardgamepublisher': 'BOARDGAME_PUBLISHER',
-      'boardgamefamily': 'BOARDGAME_FAMILY',
-      'rpgitem': 'RPG_ITEM',
-      'rpgperiodical': 'RPG_PERIODICAL',
-      'videogame': 'VIDEOGAME'
+      boardgameexpansion: "BOARDGAME_EXPANSION",
+      boardgamebase: "BOARDGAME_BASE",
+      boardgameaccessory: "BOARDGAME_ACCESSORY",
+      boardgamecategory: "BOARDGAME_CATEGORY",
+      boardgamemechanic: "BOARDGAME_MECHANIC",
+      boardgamedesigner: "BOARDGAME_DESIGNER",
+      boardgameartist: "BOARDGAME_ARTIST",
+      boardgamepublisher: "BOARDGAME_PUBLISHER",
+      boardgamefamily: "BOARDGAME_FAMILY",
+      rpgitem: "RPG_ITEM",
+      rpgperiodical: "RPG_PERIODICAL",
+      videogame: "VIDEOGAME",
     };
 
-    return linkTypeMap[linkType] || 'OTHER';
+    return linkTypeMap[linkType] || "OTHER";
   }
 
   private normalizePlay(play: any): Play {
@@ -553,7 +567,6 @@ export class BGGDataSource extends RESTDataSource {
     };
   }
 
-
   // Helper functions for data parsing
   private parseNumber(value: any): number | undefined {
     if (!value) return undefined;
@@ -571,7 +584,7 @@ export class BGGDataSource extends RESTDataSource {
     if (!name) return "";
     if (typeof name === "string") return name;
     if (Array.isArray(name)) {
-      const primary = name.find((n) => n.type === "primary");
+      const primary = name.find(n => n.type === "primary");
       return primary?.value || name[0]?.value || "";
     }
     // Handle XML parser output where name is an object with _ property
@@ -583,8 +596,8 @@ export class BGGDataSource extends RESTDataSource {
     if (typeof name === "string") return [];
     if (Array.isArray(name)) {
       return name
-        .filter((n) => n.type === "alternate")
-        .map((n) => n.value)
+        .filter(n => n.type === "alternate")
+        .map(n => n.value)
         .filter(Boolean);
     }
     return [];
