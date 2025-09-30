@@ -144,8 +144,7 @@ export class BGGDataSource extends RESTDataSource {
     }
 
     throw new Error(
-      `BGG API request failed after ${this.MAX_RETRIES + 1} attempts: ${
-        lastError instanceof Error ? lastError.message : "Unknown error"
+      `BGG API request failed after ${this.MAX_RETRIES + 1} attempts: ${lastError instanceof Error ? lastError.message : "Unknown error"
       }`
     );
   }
@@ -187,7 +186,6 @@ export class BGGDataSource extends RESTDataSource {
 
     const data = await this.makeRequest<any>(url);
 
-    // BGG API returns items directly as 'item' array, not nested under 'items'
     if (data?.item) {
       const items = Array.isArray(data.item) ? data.item : [data.item];
       return items.map((item: any) => this.normalizeThing(item));
@@ -202,7 +200,6 @@ export class BGGDataSource extends RESTDataSource {
       `/user?name=${encodeURIComponent(username)}`
     );
 
-    // BGG API returns user data directly in the root object, not nested under 'user'
     if (data?.id && data?.name) {
       return this.normalizeUser(data);
     }
@@ -214,7 +211,6 @@ export class BGGDataSource extends RESTDataSource {
     username: string,
     subtype?: string
   ): Promise<Collection | null> {
-    // Normalize subtype to uppercase for consistent handling
     const normalizedSubtype = subtype?.toUpperCase();
 
     // Use expansion workaround for boardgame subtype to include expansions
@@ -281,10 +277,10 @@ export class BGGDataSource extends RESTDataSource {
     }
   }
 
+  // Fallback to original method if workaround fails
   private async getUserCollectionFallback(
     username: string
   ): Promise<Collection | null> {
-    // Fallback to original method if workaround fails
     const url = `/collection?username=${encodeURIComponent(username)}&stats=1`;
     const data = await this.makeRequest<any>(url);
 
@@ -437,9 +433,9 @@ export class BGGDataSource extends RESTDataSource {
       address:
         user.stateorprovince || user.country
           ? {
-              city: user.stateorprovince?.value || "",
-              isoCountry: user.country?.value || "",
-            }
+            city: user.stateorprovince?.value || "",
+            isoCountry: user.country?.value || "",
+          }
           : undefined,
       guilds: [],
       microbadges: [],
