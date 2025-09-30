@@ -133,6 +133,8 @@ describe("BGGDataSource - Expansion Workaround Simple Test", () => {
         expect(item).toHaveProperty("name");
         expect(item).toHaveProperty("subtype");
         expect(item).toHaveProperty("status");
+        expect(item).toHaveProperty("stats");
+        expect(item.stats).toHaveProperty("__typename", "CollectionItemStats");
       });
 
       // Check that we have the right mix

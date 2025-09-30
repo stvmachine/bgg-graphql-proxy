@@ -2,6 +2,8 @@ import { RESTDataSource } from "@apollo/datasource-rest";
 import * as xml2js from "xml2js";
 import {
   Collection,
+  CollectionItem,
+  CollectionItemStats,
   CollectionSubtype,
   Geeklist,
   Play,
@@ -477,7 +479,7 @@ export class BGGDataSource extends RESTDataSource {
     };
   }
 
-  private normalizeCollectionItem(item: any): any {
+  private normalizeCollectionItem(item: any): CollectionItem {
     return {
       __typename: "CollectionItem",
       objectType: item.objecttype || "",
@@ -508,6 +510,27 @@ export class BGGDataSource extends RESTDataSource {
       hasPartsList: item.haspartslist || "",
       preordered: item.preordered || "",
       lastModified: item.lastmodified || "",
+      // Add stats from BGG API as nested object
+      stats: {
+        __typename: "CollectionItemStats",
+        minPlayers: this.parseNumber(item.stats?.minplayers),
+        maxPlayers: this.parseNumber(item.stats?.maxplayers),
+        minPlayTime: this.parseNumber(item.stats?.minplaytime),
+        maxPlayTime: this.parseNumber(item.stats?.maxplaytime),
+        playingTime: this.parseNumber(item.stats?.playingtime),
+        minAge: this.parseNumber(item.stats?.minage),
+        average: this.parseFloat(item.stats?.rating?.average?.value),
+        bayesAverage: this.parseFloat(item.stats?.rating?.bayesaverage?.value),
+        usersRated: this.parseNumber(item.stats?.rating?.usersrated?.value),
+        usersOwned: this.parseNumber(item.stats?.numowned),
+        usersWanting: this.parseNumber(item.stats?.rating?.wanting?.value),
+        usersWishing: this.parseNumber(item.stats?.rating?.wishing?.value),
+        numComments: this.parseNumber(item.stats?.rating?.numcomments?.value),
+        numWeights: this.parseNumber(item.stats?.rating?.numweights?.value),
+        averageWeight: this.parseFloat(
+          item.stats?.rating?.averageweight?.value
+        ),
+      } as CollectionItemStats,
     };
   }
 

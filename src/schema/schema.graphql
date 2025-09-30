@@ -277,6 +277,25 @@ type CollectionItem {
   hasPartsList: String!
   preordered: String!
   lastModified: String!
+  stats: CollectionItemStats
+}
+
+type CollectionItemStats {
+  minPlayers: Int
+  maxPlayers: Int
+  minPlayTime: Int
+  maxPlayTime: Int
+  playingTime: Int
+  minAge: Int
+  average: Float
+  bayesAverage: Float
+  usersRated: Int
+  usersOwned: Int
+  usersWanting: Int
+  usersWishing: Int
+  numComments: Int
+  numWeights: Int
+  averageWeight: Float
 }
 
 type Status {

@@ -85,11 +85,31 @@ export type CollectionItem = {
   objectId: Scalars['ID']['output'];
   objectType: Scalars['String']['output'];
   preordered: Scalars['String']['output'];
+  stats?: Maybe<CollectionItemStats>;
   status: Status;
   subtype: Scalars['String']['output'];
   thumbnail: Scalars['String']['output'];
   wantPartsList: Scalars['String']['output'];
   yearPublished: Scalars['Int']['output'];
+};
+
+export type CollectionItemStats = {
+  __typename?: 'CollectionItemStats';
+  average?: Maybe<Scalars['Float']['output']>;
+  averageWeight?: Maybe<Scalars['Float']['output']>;
+  bayesAverage?: Maybe<Scalars['Float']['output']>;
+  maxPlayTime?: Maybe<Scalars['Int']['output']>;
+  maxPlayers?: Maybe<Scalars['Int']['output']>;
+  minAge?: Maybe<Scalars['Int']['output']>;
+  minPlayTime?: Maybe<Scalars['Int']['output']>;
+  minPlayers?: Maybe<Scalars['Int']['output']>;
+  numComments?: Maybe<Scalars['Int']['output']>;
+  numWeights?: Maybe<Scalars['Int']['output']>;
+  playingTime?: Maybe<Scalars['Int']['output']>;
+  usersOwned?: Maybe<Scalars['Int']['output']>;
+  usersRated?: Maybe<Scalars['Int']['output']>;
+  usersWanting?: Maybe<Scalars['Int']['output']>;
+  usersWishing?: Maybe<Scalars['Int']['output']>;
 };
 
 export enum CollectionSubtype {
@@ -607,6 +627,7 @@ export type ResolversTypes = ResolversObject<{
   Collection: ResolverTypeWrapper<Collection>;
   CollectionFiltersInput: CollectionFiltersInput;
   CollectionItem: ResolverTypeWrapper<CollectionItem>;
+  CollectionItemStats: ResolverTypeWrapper<CollectionItemStats>;
   CollectionSubtype: CollectionSubtype;
   Comment: ResolverTypeWrapper<Comment>;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
@@ -663,6 +684,7 @@ export type ResolversParentTypes = ResolversObject<{
   Collection: Collection;
   CollectionFiltersInput: CollectionFiltersInput;
   CollectionItem: CollectionItem;
+  CollectionItemStats: CollectionItemStats;
   Comment: Comment;
   Date: Scalars['Date']['output'];
   Designer: Designer;
@@ -780,11 +802,31 @@ export type CollectionItemResolvers<ContextType = ApolloContext, ParentType exte
   objectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   objectType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   preordered?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  stats?: Resolver<Maybe<ResolversTypes['CollectionItemStats']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['Status'], ParentType, ContextType>;
   subtype?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   thumbnail?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   wantPartsList?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   yearPublished?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type CollectionItemStatsResolvers<ContextType = ApolloContext, ParentType extends ResolversParentTypes['CollectionItemStats'] = ResolversParentTypes['CollectionItemStats']> = ResolversObject<{
+  average?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  averageWeight?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  bayesAverage?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  maxPlayTime?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  maxPlayers?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  minAge?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  minPlayTime?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  minPlayers?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  numComments?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  numWeights?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  playingTime?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  usersOwned?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  usersRated?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  usersWanting?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  usersWishing?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1140,6 +1182,7 @@ export type Resolvers<ContextType = ApolloContext> = ResolversObject<{
   Category?: CategoryResolvers<ContextType>;
   Collection?: CollectionResolvers<ContextType>;
   CollectionItem?: CollectionItemResolvers<ContextType>;
+  CollectionItemStats?: CollectionItemStatsResolvers<ContextType>;
   Comment?: CommentResolvers<ContextType>;
   Date?: GraphQLScalarType;
   Designer?: DesignerResolvers<ContextType>;

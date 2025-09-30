@@ -47,6 +47,16 @@ describe("BGGDataSource - Collection Tests", () => {
       expect(firstItem?.yearPublished).toBe(2020);
       expect(firstItem?.numPlays).toBe(0);
       expect(firstItem?.status.own).toBe("1");
+
+      // Test that stats are properly nested
+      expect(firstItem?.stats).toBeDefined();
+      expect(firstItem?.stats?.__typename).toBe("CollectionItemStats");
+      expect(firstItem?.stats?.minPlayers).toBe(3);
+      expect(firstItem?.stats?.maxPlayers).toBe(7);
+      expect(firstItem?.stats?.playingTime).toBe(30);
+      expect(firstItem?.stats?.average).toBe(7.82923);
+      expect(firstItem?.stats?.usersRated).toBe(10588);
+      expect(firstItem?.stats?.usersOwned).toBe(17570);
     });
 
     it("should handle empty collection", async () => {
