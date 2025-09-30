@@ -11,10 +11,12 @@ A GraphQL proxy for the BoardGameGeek API, built with Apollo Server v4 and deplo
 ## 🛠️ Local Development
 
 ### Prerequisites
-- Node.js 20+ 
+
+- Node.js 20+
 - npm
 
 ### Setup
+
 ```bash
 # Install dependencies
 npm install
@@ -31,10 +33,12 @@ The GraphQL endpoint will be available at `http://localhost:4000/graphql`
 ## 🚀 Vercel Deployment
 
 ### Prerequisites
+
 - Vercel CLI installed
 - Git repository
 
 ### Deploy
+
 ```bash
 # Install Vercel CLI
 npm install -g vercel
@@ -47,7 +51,9 @@ vercel --prod
 ```
 
 ### Environment Variables
+
 Set these in your Vercel dashboard:
+
 - `REDIS_URL` (optional): Your Redis connection string for caching
 - `BGG_API_BASE_URL` (optional): Defaults to `https://boardgamegeek.com/xmlapi2`
 - `NODE_ENV`: Automatically set to `production` by Vercel
@@ -57,6 +63,7 @@ Set these in your Vercel dashboard:
 The API provides access to BoardGameGeek data through a clean GraphQL interface:
 
 ### Core Types
+
 - **Game**: Board game information
 - **Search**: Search functionality for games
 - **Thing**: Detailed game data from BGG
@@ -64,6 +71,7 @@ The API provides access to BoardGameGeek data through a clean GraphQL interface:
 ## 🎮 Example Queries
 
 ### Search for Games
+
 ```graphql
 query SearchGames {
   search(query: "Catan") {
@@ -80,6 +88,7 @@ query SearchGames {
 ```
 
 ### Get Game Details
+
 ```graphql
 query GetGameDetails {
   thing(id: "13") {
@@ -102,6 +111,7 @@ query GetGameDetails {
 ```
 
 ### Get Top Rated Games
+
 ```graphql
 query GetTopGames {
   search(query: "top") {
@@ -152,7 +162,6 @@ query GetTopGames {
 - **CORS**: Cross-origin resource sharing
 - **Axios**: HTTP client for BGG API
 - **xml2js**: XML parsing for BGG responses
-
 
 ## 🎯 Usage with Apollo Studio
 

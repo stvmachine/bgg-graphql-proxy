@@ -1,5 +1,3 @@
-import { BGGDataSource } from './bggDataSource';
+import { BGGDataSource } from "./bggDataSource";
 
-export {
-  BGGDataSource,
-};
+export { BGGDataSource };

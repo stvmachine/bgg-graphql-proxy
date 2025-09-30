@@ -16,6 +16,7 @@ src/__tests__/
 ### **Resolver Tests** (`resolvers.test.ts`)
 
 #### **Query Resolvers**
+
 - ✅ **`thing`** - Single item fetching
 - ✅ **`things`** - Multiple items fetching
 - ✅ **`search`** - Search functionality with parameters
@@ -25,12 +26,14 @@ src/__tests__/
 - ✅ **`hotItems`** - Hot items with type filtering
 
 #### **Thing Resolvers**
+
 - ✅ **`baseGame`** - Expansion to base game relationship
 - ✅ **`expansionFor`** - Base game to expansions relationship
 - ✅ **Error handling** - API failures and edge cases
 - ✅ **Performance** - Batching and rate limiting
 
 #### **Test Scenarios**
+
 1. **Basic Functionality** - All resolvers call correct data source methods
 2. **Parameter Passing** - Arguments passed correctly to data sources
 3. **Response Formatting** - Data formatted correctly for GraphQL
@@ -41,6 +44,7 @@ src/__tests__/
 ### **Data Source Tests** (`bggDataSource.test.ts`)
 
 #### **Core Methods**
+
 - ✅ **`getThing`** - Single item fetching and parsing
 - ✅ **`getThings`** - Multiple items fetching and parsing
 - ✅ **`searchThings`** - Search with type and exact parameters
@@ -49,12 +53,14 @@ src/__tests__/
 - ✅ **`normalizeLinks`** - Link categorization and expansion detection
 
 #### **Expansion Functionality**
+
 - ✅ **Expansion Detection** - `isExpansion` field correctly set
 - ✅ **Link Categorization** - Links properly categorized by type
 - ✅ **Base Game Relationships** - Expansion to base game links
 - ✅ **Collection Workaround** - BGG API bug handling
 
 #### **Test Scenarios**
+
 1. **XML Parsing** - Correct parsing of BGG XML responses
 2. **Data Normalization** - Fields mapped to GraphQL schema
 3. **Type Mapping** - BGG types mapped to GraphQL enums
@@ -65,26 +71,31 @@ src/__tests__/
 ## 🚀 Running Tests
 
 ### **Install Dependencies**
+
 ```bash
 npm install
 ```
 
 ### **Run All Tests**
+
 ```bash
 npm test
 ```
 
 ### **Run Tests in Watch Mode**
+
 ```bash
 npm run test:watch
 ```
 
 ### **Run Tests with Coverage**
+
 ```bash
 npm run test:coverage
 ```
 
 ### **Run Specific Test Files**
+
 ```bash
 # Test resolvers only
 npx jest src/__tests__/resolvers.test.ts
@@ -94,6 +105,7 @@ npx jest src/__tests__/bggDataSource.test.ts
 ```
 
 ### **Run Tests with Verbose Output**
+
 ```bash
 npx jest --verbose
 ```
@@ -101,12 +113,14 @@ npx jest --verbose
 ## 📊 Test Results
 
 ### **Expected Test Results**
+
 - ✅ **All tests pass** - No failing tests
 - ✅ **High coverage** - >90% code coverage
 - ✅ **Fast execution** - Tests complete in <30 seconds
 - ✅ **No console errors** - Clean test output
 
 ### **Test Categories**
+
 1. **Unit Tests** - Individual function testing
 2. **Integration Tests** - Component interaction testing
 3. **Error Tests** - Error handling validation
@@ -116,30 +130,32 @@ npx jest --verbose
 ## 🔧 Test Configuration
 
 ### **Jest Configuration** (`jest.config.js`)
+
 ```javascript
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/__tests__/**/*.test.ts"],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    "^.+\\.ts$": "ts-jest",
   },
   collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/__tests__/**',
-    '!src/generated/**',
+    "src/**/*.ts",
+    "!src/**/*.d.ts",
+    "!src/__tests__/**",
+    "!src/generated/**",
   ],
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "lcov", "html"],
+  setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"],
   testTimeout: 10000,
   verbose: true,
 };
 ```
 
 ### **Test Setup** (`setup.ts`)
+
 - Console output suppression during tests
 - Environment variable mocking
 - Global test timeout configuration
@@ -148,36 +164,44 @@ module.exports = {
 ## 🧪 Test Examples
 
 ### **Resolver Test Example**
+
 ```typescript
-describe('thing resolver', () => {
-  it('should call bggAPI.getThing with correct id', async () => {
-    const mockThing = { id: '13', name: 'CATAN', isExpansion: false };
+describe("thing resolver", () => {
+  it("should call bggAPI.getThing with correct id", async () => {
+    const mockThing = { id: "13", name: "CATAN", isExpansion: false };
     mockBGGDataSource.getThing.mockResolvedValue(mockThing);
 
-    const result = await resolvers.Query!.thing!(null, { id: '13' }, mockContext);
+    const result = await resolvers.Query!.thing!(
+      null,
+      { id: "13" },
+      mockContext
+    );
 
-    expect(mockBGGDataSource.getThing).toHaveBeenCalledWith('13');
+    expect(mockBGGDataSource.getThing).toHaveBeenCalledWith("13");
     expect(result).toEqual(mockThing);
   });
 });
 ```
 
 ### **Data Source Test Example**
+
 ```typescript
-describe('getThing', () => {
-  it('should fetch and parse a single thing', async () => {
+describe("getThing", () => {
+  it("should fetch and parse a single thing", async () => {
     const mockXmlResponse = '<item id="13" type="boardgame">...</item>';
     mockedAxios.get.mockResolvedValue({ data: mockXmlResponse });
     mockXmlParser.parseStringPromise.mockResolvedValue(mockParsedData);
 
-    const result = await bggDataSource.getThing('13');
+    const result = await bggDataSource.getThing("13");
 
-    expect(result).toEqual(expect.objectContaining({
-      id: '13',
-      name: 'CATAN',
-      isExpansion: false,
-      type: 'BOARDGAME',
-    }));
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: "13",
+        name: "CATAN",
+        isExpansion: false,
+        type: "BOARDGAME",
+      })
+    );
   });
 });
 ```
@@ -205,11 +229,13 @@ describe('getThing', () => {
 ### **Debug Tips**
 
 1. **Run Single Test**
+
    ```bash
    npx jest --testNamePattern="should fetch and parse a single thing"
    ```
 
 2. **Debug Mode**
+
    ```bash
    npx jest --detectOpenHandles --forceExit
    ```
@@ -222,12 +248,14 @@ describe('getThing', () => {
 ## 📈 Coverage Goals
 
 ### **Target Coverage**
+
 - **Overall**: >90%
 - **Resolvers**: >95%
 - **Data Source**: >90%
 - **Error Handling**: >85%
 
 ### **Coverage Reports**
+
 - **Text**: Console output
 - **HTML**: `coverage/index.html`
 - **LCOV**: `coverage/lcov.info`
@@ -235,6 +263,7 @@ describe('getThing', () => {
 ## 🔄 Continuous Integration
 
 ### **GitHub Actions Example**
+
 ```yaml
 name: Tests
 on: [push, pull_request]
@@ -245,13 +274,14 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: "20"
       - run: npm install
       - run: npm test
       - run: npm run test:coverage
 ```
 
 ### **Pre-commit Hooks**
+
 ```bash
 # Install husky for git hooks
 npm install --save-dev husky
@@ -263,20 +293,21 @@ npx husky add .husky/pre-commit "npm test"
 ## 📝 Adding New Tests
 
 ### **Test Structure**
+
 ```typescript
-describe('Feature Name', () => {
+describe("Feature Name", () => {
   beforeEach(() => {
     // Setup for each test
   });
 
-  it('should do something specific', async () => {
+  it("should do something specific", async () => {
     // Arrange
-    const input = 'test input';
-    const expected = 'expected output';
-    
+    const input = "test input";
+    const expected = "expected output";
+
     // Act
     const result = await functionUnderTest(input);
-    
+
     // Assert
     expect(result).toEqual(expected);
   });
@@ -284,6 +315,7 @@ describe('Feature Name', () => {
 ```
 
 ### **Best Practices**
+
 1. **Descriptive test names** - Clear what the test validates
 2. **Single responsibility** - One assertion per test
 3. **Proper setup/teardown** - Clean state between tests
@@ -300,12 +332,14 @@ describe('Feature Name', () => {
 ## 📊 Test Metrics
 
 ### **Performance Benchmarks**
+
 - **Test Execution**: <30 seconds
 - **Memory Usage**: <100MB
 - **Coverage Generation**: <5 seconds
 - **Watch Mode**: <1 second per test
 
 ### **Quality Metrics**
+
 - **Test Reliability**: >99% pass rate
 - **Code Coverage**: >90%
 - **Test Maintainability**: High

@@ -90,16 +90,18 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
       }
 
       // Find the base game link
-      const baseGameLink = parent.links?.find(link =>
-        link.linkType === 'BOARDGAME_BASE' ||
-        (link.type === 'boardgamebase' || link.type === 'boardgame')
+      const baseGameLink = parent.links?.find(
+        link =>
+          link.linkType === "BOARDGAME_BASE" ||
+          link.type === "boardgamebase" ||
+          link.type === "boardgame"
       );
 
       if (baseGameLink) {
         try {
           return await dataSources.bggAPI.getThing(baseGameLink.targetId);
         } catch (error) {
-          console.error('Error fetching base game:', error);
+          console.error("Error fetching base game:", error);
           return null;
         }
       }
@@ -114,10 +116,12 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
       }
 
       // Find expansion links
-      const expansionLinks = parent.links?.filter(link =>
-        link.linkType === 'BOARDGAME_EXPANSION' ||
-        link.type === 'boardgameexpansion'
-      ) || [];
+      const expansionLinks =
+        parent.links?.filter(
+          link =>
+            link.linkType === "BOARDGAME_EXPANSION" ||
+            link.type === "boardgameexpansion"
+        ) || [];
 
       if (expansionLinks.length === 0) {
         return [];
@@ -137,7 +141,7 @@ export const resolvers: Partial<Resolvers<ApolloContext>> = {
         }
         return expansions;
       } catch (error) {
-        console.error('Error fetching expansions:', error);
+        console.error("Error fetching expansions:", error);
         return [];
       }
     },
