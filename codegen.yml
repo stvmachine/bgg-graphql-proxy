@@ -1,0 +1,24 @@
+overwrite: true
+schema: "src/schema/schema.graphql"
+generates:
+  # TypeScript types + resolvers
+  src/generated/graphql.ts:
+    plugins:
+      - typescript
+      # - typescript-resolvers
+    # config:
+    #   useIndexSignature: true
+    #   contextType: "../resolvers#ApolloContext"
+    #   scalars:
+    #     Date: string
+    #     URL: string
+    #     Email: string
+    #     JSON: any
+    #     ID: string
+
+  # Zod schemas
+  src/generated/graphql.zod.ts:
+    plugins:
+      - typescript-validation-schema
+    config:
+      schema: zodv4
