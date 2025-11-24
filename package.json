@@ -8,7 +8,7 @@
     "dev": "tsx watch index.ts",
     "build": "tsc",
     "vercel-build": "tsc",
-    "generate-types": "graphql-codegen --config codegen.yml",
+    "generate-types": "graphql-codegen --config codegen.yml && node -e \"const fs=require('fs');const f='src/generated/graphql.zod.ts';let c=fs.readFileSync(f,'utf8');if(!c.includes('from \\'./graphql\\'')){c=c.replace('import * as z from \\'zod\\'','import * as z from \\'zod\\'\\nimport { CacheControlScope, CollectionSubtype, LinkType, ThingType, CollectionFiltersInput, PlayFiltersInput, SearchInput } from \\'./graphql\\'');fs.writeFileSync(f,c);}\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

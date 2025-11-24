@@ -5,16 +5,16 @@ generates:
   src/generated/graphql.ts:
     plugins:
       - typescript
-      # - typescript-resolvers
-    # config:
-    #   useIndexSignature: true
-    #   contextType: "../resolvers#ApolloContext"
-    #   scalars:
-    #     Date: string
-    #     URL: string
-    #     Email: string
-    #     JSON: any
-    #     ID: string
+      - typescript-resolvers
+    config:
+      useIndexSignature: true
+      contextType: "../resolvers#ApolloContext"
+      scalars:
+        Date: string
+        URL: string
+        Email: string
+        JSON: any
+        ID: string
 
   # Zod schemas
   src/generated/graphql.zod.ts:

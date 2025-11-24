@@ -1,4 +1,5 @@
 import * as z from 'zod'
+import { CacheControlScope, CollectionSubtype, LinkType, ThingType, CollectionFiltersInput, PlayFiltersInput, SearchInput } from './graphql'
 
 type Properties<T> = Required<{
   [K in keyof T]: z.ZodType<T[K]>;
