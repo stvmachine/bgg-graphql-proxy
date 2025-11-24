@@ -1,21 +1,89 @@
 ---
-description: 
+description: Codebase structure and organization guidelines
 globs: 
 alwaysApply: true
 ---
 
-# Codebase Structure and Commands -- THIS IS OUTOFDATE
+# Codebase Structure and Commands
 
 ## Project Structure
 
-The project follows a monorepo structure inside of src.
+This is a GraphQL proxy for the BoardGameGeek API, built with Apollo Server v4, TypeScript, and Express, deployed on Vercel.
 
 ### Core Directories
 
+```
+├── src/
+│   ├── datasources/          # Data source implementations
+│   │   ├── bggDataSource.ts  # BGG API integration (RESTDataSource)
+│   │   └── index.ts          # Data source exports
+│   ├── resolvers/            # GraphQL resolvers
+│   │   └── index.ts          # Resolver implementations
+│   ├── schema/               # GraphQL schema definitions
+│   │   └── schema.graphql    # Main GraphQL schema
+│   ├── generated/            # Auto-generated files (do not edit)
+│   │   ├── graphql.ts        # TypeScript types from schema
+│   │   └── graphql.zod.ts    # Zod validation schemas
+│   └── __tests__/            # Test files
+│       ├── fixtures/         # Test fixtures (XML responses)
+│       └── *.test.ts         # Jest test files
+├── dist/                     # Compiled JavaScript (generated)
+├── coverage/                 # Test coverage reports (generated)
+├── index.ts                  # Main server entry point
+├── codegen.yml               # GraphQL Codegen configuration
+├── vercel.json               # Vercel deployment configuration
+├── jest.config.js            # Jest test configuration
+├── eslint.config.js          # ESLint configuration
+├── tsconfig.json             # TypeScript configuration
+└── package.json              # Dependencies and scripts
+```
+
+### Key Files
+
+- **`index.ts`**: Main Express server setup, Apollo Server initialization, Redis cache configuration, API routes
+- **`src/datasources/bggDataSource.ts`**: BGG API client using RESTDataSource, XML parsing, rate limiting, retry logic
+- **`src/resolvers/index.ts`**: GraphQL resolvers that delegate to data sources
+- **`src/schema/schema.graphql`**: GraphQL type definitions and queries
+- **`vercel.json`**: Vercel deployment config including cron jobs
 
 ### Configuration Files
-- `package.json` - Project dependencies and scripts
-- `.gitignore` - Git ignore configuration
+
+- `package.json` - Project dependencies and npm scripts
+- `tsconfig.json` - TypeScript compiler configuration (ES2022, NodeNext)
+- `codegen.yml` - GraphQL Codegen config for type generation
+- `jest.config.js` - Jest test runner configuration
+- `eslint.config.js` - ESLint flat config (v9)
+- `vercel.json` - Vercel deployment and cron job configuration
+- `.gitignore` - Git ignore patterns
+
+## Available Commands
+
+### Development
+- `npm run dev` - Start development server with hot reload (tsx watch)
+- `npm start` - Start production server (requires build first)
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run vercel-build` - Build for Vercel deployment
+
+### Code Generation
+- `npm run generate-types` - Generate TypeScript types and Zod schemas from GraphQL schema
+
+### Testing
+- `npm test` - Run all tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
+
+### Code Quality
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint errors automatically
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
 
 ## Best Practices
+
+- **Generated Files**: Never edit files in `src/generated/` - they are auto-generated from the GraphQL schema
+- **Type Safety**: Use generated types from `src/generated/graphql.ts` for type safety
+- **Testing**: Place test files next to source files in `src/__tests__/`
+- **Fixtures**: Store test fixtures (XML responses) in `src/__tests__/fixtures/`
+- **Imports**: Use absolute imports from `src/` directory
+- **Caching**: Redis caching is optional - falls back to in-memory cache if Redis unavailable
 
