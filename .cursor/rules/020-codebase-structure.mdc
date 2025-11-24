@@ -1,0 +1,21 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Codebase Structure and Commands -- THIS IS OUTOFDATE
+
+## Project Structure
+
+The project follows a monorepo structure inside of src.
+
+### Core Directories
+
+
+### Configuration Files
+- `package.json` - Project dependencies and scripts
+- `.gitignore` - Git ignore configuration
+
+## Best Practices
+
