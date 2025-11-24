@@ -115,16 +115,17 @@ app.get("/api/keepalive", async (req, res) => {
   // Prevent caching for cron jobs
   res.set({
     "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0",
+    Pragma: "no-cache",
+    Expires: "0",
   });
-  
+
   const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
   const executionTime = new Date().toISOString();
-  const isCronJob = req.headers["user-agent"]?.includes("vercel-cron") || 
-                    req.headers["x-vercel-cron"] === "1" ||
-                    req.query.secret === process.env.CRON_SECRET;
-  
+  const isCronJob =
+    req.headers["user-agent"]?.includes("vercel-cron") ||
+    req.headers["x-vercel-cron"] === "1" ||
+    req.query.secret === process.env.CRON_SECRET;
+
   console.log(`[KEEPALIVE] ${executionTime} - Request received`, {
     isCronJob,
     userAgent: req.headers["user-agent"],
@@ -134,40 +135,40 @@ app.get("/api/keepalive", async (req, res) => {
       "user-agent": req.headers["user-agent"],
     },
   });
-  
+
   try {
     // Create a temporary Redis connection to ping it
     const keyvRedis = new KeyvRedis(redisUrl);
     const testKeyv = new Keyv<string>(keyvRedis);
-    
+
     // Perform a simple operation to keep Redis alive
     const testKey = "keepalive:ping";
     const timestamp = Date.now().toString();
-    
+
     // Set a test key with current timestamp
     await testKeyv.set(testKey, timestamp, 60); // Expires in 60 seconds
-    
+
     // Get it back to verify connection
     const value = await testKeyv.get(testKey);
-    
+
     // Store last execution timestamp in Redis for persistence
     const lastExecKey = "keepalive:last_execution";
     await testKeyv.set(lastExecKey, executionTime, 86400 * 7); // Keep for 7 days
-    
+
     // Clean up test key
     await testKeyv.delete(testKey);
     await testKeyv.disconnect();
-    
+
     const success = value === timestamp;
-    
+
     // Update in-memory tracking
     lastKeepaliveExecution = {
       timestamp: executionTime,
       success,
     };
-    
+
     console.log(`[KEEPALIVE] ${executionTime} - Success: ${success}`);
-    
+
     res.json({
       status: "ok",
       message: "Redis keepalive successful",
@@ -178,16 +179,17 @@ app.get("/api/keepalive", async (req, res) => {
       cronSchedule: "0 0 * * *",
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     console.error(`[KEEPALIVE] ${executionTime} - Error:`, errorMessage);
-    
+
     // Update in-memory tracking
     lastKeepaliveExecution = {
       timestamp: executionTime,
       success: false,
       error: errorMessage,
     };
-    
+
     res.status(500).json({
       status: "error",
       message: "Redis keepalive failed",
@@ -201,7 +203,7 @@ app.get("/api/keepalive", async (req, res) => {
 // Status endpoint to check last keepalive execution
 app.get("/api/keepalive/status", async (req, res) => {
   const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-  
+
   try {
     // Try to get last execution from Redis
     const keyvRedis = new KeyvRedis(redisUrl);
@@ -209,13 +211,17 @@ app.get("/api/keepalive/status", async (req, res) => {
     const lastExecKey = "keepalive:last_execution";
     const lastExecFromRedis = await testKeyv.get(lastExecKey);
     await testKeyv.disconnect();
-    
+
     res.json({
       status: "ok",
-      lastExecution: lastKeepaliveExecution || (lastExecFromRedis ? {
-        timestamp: lastExecFromRedis,
-        success: true,
-      } : null),
+      lastExecution:
+        lastKeepaliveExecution ||
+        (lastExecFromRedis
+          ? {
+              timestamp: lastExecFromRedis,
+              success: true,
+            }
+          : null),
       cronSchedule: "0 0 * * * (Daily at 00:00 UTC)",
       endpoint: "/api/keepalive",
       vercelCronConfigured: true,
